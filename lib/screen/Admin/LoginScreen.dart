@@ -29,133 +29,135 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // Triangle with logo
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              ClipPath(
-                clipper: InvertedTriangleClipper(),
-                child: Container(
-                  height: 200,
-                  color: Color(0xFF134B70),
-                ),
-              ),
-              Positioned(
-                top: 90,
-                child: CircleAvatar(
-                  radius: 60.0,
-                  backgroundImage: AssetImage('assets/L.png'), // Replace with your image asset
-                  backgroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height : 80),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Username Field with Underline
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 25.0),
-                    child: TextField(
-                      controller: _usernameController,
-                      decoration: InputDecoration(
-                        labelText: 'Username',
-                        hintText: 'Enter your username',
-                        prefixIcon: Icon(Icons.person),
-                        border: InputBorder.none, // No border, only underline
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFF134B70)),
-                        ),
-                      ),
-                    ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Triangle with logo
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                ClipPath(
+                  clipper: InvertedTriangleClipper(),
+                  child: Container(
+                    height: 200,
+                    color: Color(0xFF134B70),
                   ),
-                  SizedBox(height: 15.0),
-
-                  // Password Field with Underline
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 25.0),
-                    child: TextField(
-                      controller: _passwordController,
-                      obscureText: _obscureText,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        hintText: 'Enter your password',
-
-                        prefixIcon: Icon(Icons.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureText ? Icons.visibility_off : Icons.visibility,
+                ),
+                Positioned(
+                  top: 90,
+                  child: CircleAvatar(
+                    radius: 60.0,
+                    backgroundImage: AssetImage('assets/L.png'), // Replace with your image asset
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height : 80),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Username Field with Underline
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 25.0),
+                      child: TextField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          hintText: 'Enter your username',
+                          prefixIcon: Icon(Icons.person),
+                          border: InputBorder.none, // No border, only underline
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscureText = !_obscureText;
-                            });
-                          },
-                        ),
-                        border: InputBorder.none, // No border, only underline
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                        ),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFF134B70)),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF134B70)),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 20.0),
-
-                  // Login Button
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 25.0),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 15.0),
-                        backgroundColor: Color(0xFF134B70),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
+                    SizedBox(height: 15.0),
+      
+                    // Password Field with Underline
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 25.0),
+                      child: TextField(
+                        controller: _passwordController,
+                        obscureText: _obscureText,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          hintText: 'Enter your password',
+      
+                          prefixIcon: Icon(Icons.lock),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureText ? Icons.visibility_off : Icons.visibility,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureText = !_obscureText;
+                              });
+                            },
+                          ),
+                          border: InputBorder.none, // No border, only underline
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Colors.grey),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF134B70)),
+                          ),
                         ),
                       ),
+                    ),
+                    SizedBox(height: 20.0),
+      
+                    // Login Button
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 25.0),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 15.0),
+                          backgroundColor: Color(0xFF134B70),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        onPressed: () {
+                          // Perform login validation here
+                          // For now, let's navigate to the dashboard screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => DashboardScreen()),
+                          );
+                        },
+                        child: Text(
+                          'Login',
+                          style: TextStyle(fontSize: 18.0),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 15.0),
+      
+                    // Forgot Password Link
+                    TextButton(
                       onPressed: () {
-                        // Perform login validation here
-                        // For now, let's navigate to the dashboard screen
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => DashboardScreen()),
-                        );
+                        // Handle forgot password action here
                       },
                       child: Text(
-                        'Login',
-                        style: TextStyle(fontSize: 18.0),
+                        'Forgot Password?',
+                        style: TextStyle(color: Colors.grey),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 15.0),
-
-                  // Forgot Password Link
-                  TextButton(
-                    onPressed: () {
-                      // Handle forgot password action here
-                    },
-                    child: Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

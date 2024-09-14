@@ -58,9 +58,9 @@ class _DashboardState extends State<LoginAs> {
                 ),
               ),
             ),
-
+      
             SizedBox(height: 60),
-
+      
             // Options: Student, Teacher, Admin
             Padding(
               padding: const EdgeInsets.all(20.0),
