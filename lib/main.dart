@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/LoginAs.dart';
 import 'package:school_bridge_app/screen/Splash_screen.dart';
 
 
@@ -10,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: SplashScreen(),
+      home: LoginAs(),
     ); // Currently, it shows a placeholdergi
   }
 }

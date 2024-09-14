@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'package:school_bridge_app/screen/Admin/ForgotScreen.dart';
+
 void main() {
   runApp(SchoolBridgeApp());
 }
@@ -145,7 +147,11 @@ class _LoginPageState extends State<LoginPage> {
                     // Forgot Password Link
                     TextButton(
                       onPressed: () {
-                        // Handle forgot password action here
+                            // Handle forgot password action here
+                            Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ForgetScreen()),
+                            );
                       },
                       child: Text(
                         'Forgot Password?',
