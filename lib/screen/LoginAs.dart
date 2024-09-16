@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/Student/StudentLoginPage.dart';
+import 'package:school_bridge_app/screen/Teacher/TeacherLoginPage.dart';
 import 'Admin/LoginScreen.dart';
 
 
@@ -32,10 +34,12 @@ class _DashboardState extends State<LoginAs> {
                 ),
                 Positioned(
                   top: 100, // Position the circle inside the triangle
-                  child: CircleAvatar(
-                    radius: 60,
-                    backgroundImage: AssetImage('assets/L.png'), // Adjust image path
-                    backgroundColor: Colors.white,
+                  child: Container(
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundImage: AssetImage('assets/L.png'), // Adjust image path
+                      backgroundColor: Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -75,6 +79,10 @@ class _DashboardState extends State<LoginAs> {
                         label: 'STUDENT',
                         onTap: () {
                           // Handle student role selection
+                          Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => StudentLoginPage()),
+                          );
                         },
                       ),
                       RoleCard(
@@ -82,6 +90,10 @@ class _DashboardState extends State<LoginAs> {
                         label: 'TEACHER',
                         onTap: () {
                           // Handle teacher role selection
+                          Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => TeacherLoginPage()),
+                          );
                         },
                       ),
                     ],
