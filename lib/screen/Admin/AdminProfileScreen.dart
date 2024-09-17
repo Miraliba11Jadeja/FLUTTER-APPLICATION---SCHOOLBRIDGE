@@ -98,12 +98,19 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF134B70),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
+        leading: GestureDetector(
+          onTap: () {
             Navigator.of(context).pop();
           },
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.asset(
+              'assets/back.png', // Make sure the path is correct
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
+
         title: Text('Admin Profile'),
       ),
       body: SingleChildScrollView(

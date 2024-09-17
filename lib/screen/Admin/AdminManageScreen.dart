@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:school_bridge_app/screen/Admin/AdminProfileScreen.dart';
+import 'package:school_bridge_app/screen/Admin/GeneralDashboardScreen.dart';
+import 'package:school_bridge_app/screen/Admin/StudentDashboardScreen.dart';
+import 'package:school_bridge_app/screen/Admin/TeacherDashboardSCreen.dart';
+import 'package:school_bridge_app/screen/LoginAs.dart';
+
 
 class AdminManageScreen extends StatelessWidget {
   @override
@@ -88,19 +93,31 @@ class AdminManageScreen extends StatelessWidget {
                   AdminButton(
                     icon: Icons.school,
                     text: "TEACHERS",
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => TeacherDashboardScreen()),
+                      );
+                    },
                   ),
                   SizedBox(height: 10),
                   AdminButton(
                     icon: Icons.person,
                     text: "STUDENTS",
-                    onTap: () {},
+                     onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => StudentDashboardScreen()),
+                      );
+                    },
                   ),
                   SizedBox(height: 10),
                   AdminButton(
                     icon: Icons.home,
                     text: "GENERAL",
-                    onTap: () {},
+                     onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => GeneralDashboardScreen()),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -108,11 +125,16 @@ class AdminManageScreen extends StatelessWidget {
 
             // Logout Button
             AdminButton(
-              icon: Icons.logout,
-              text: "LOGOUT",
-              onTap: () {},
-              isLogout: true,
-            ),
+  icon: Icons.logout,
+  text: "LOGOUT",
+  onTap: () {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => LoginAs()),
+    );
+  },
+  isLogout: true,
+),
+
           ],
         ),
       ),
