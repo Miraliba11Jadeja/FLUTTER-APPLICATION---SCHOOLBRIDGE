@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/Admin/AdminProfileScreen.dart';
 
 class AdminManageScreen extends StatelessWidget {
   @override
@@ -24,10 +25,17 @@ class AdminManageScreen extends StatelessWidget {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20.0),
-            child: CircleAvatar(
-              radius: 20, // smaller size for the app bar
-              backgroundColor: Colors.grey[300],
-              child: Icon(Icons.person, size: 30, color: Colors.white),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => AdminProfileScreen()),
+                );
+              },
+              child: CircleAvatar(
+                radius: 20, // smaller size for the app bar
+                backgroundColor: Colors.grey[300],
+                child: Icon(Icons.person, size: 30, color: Colors.white),
+              ),
             ),
           ),
         ],
@@ -99,7 +107,6 @@ class AdminManageScreen extends StatelessWidget {
             ),
 
             // Logout Button
-          
             AdminButton(
               icon: Icons.logout,
               text: "LOGOUT",
@@ -115,7 +122,7 @@ class AdminManageScreen extends StatelessWidget {
 
 // Reusable AdminButton Widget
 class AdminButton extends StatelessWidget {
-  final IconData icon;
+  final dynamic icon; // Can accept IconData or String (for asset image)
   final String text;
   final VoidCallback onTap;
   final bool isLogout;
@@ -129,25 +136,44 @@ class AdminButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onTap,
-      style: ElevatedButton.styleFrom(
-        primary: isLogout ? Colors.red : Color(0xFF134B70),
-        padding: EdgeInsets.symmetric(vertical: 15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Icon(icon, size: 30, color: Colors.white),
-          SizedBox(width: 20),
-          Text(
-            text,
-            style: TextStyle(fontSize: 18, color: Colors.white),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 10), // Margin around the button
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          primary: isLogout ? Color(0xFFCC3F4D) : Color(0xFF134B70),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
-        ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 70), // Padding inside the button
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Text and icon close together
+              Row(
+                children: [
+                  Text(
+                    text,
+                    style: TextStyle(fontSize: 21, color: Colors.white),
+                  ),
+                  SizedBox(width: 10), // Control spacing between text and icon
+                ],
+              ),
+
+              // Icon or Image on the right side
+              isLogout
+                  ? Image.asset(
+                      'assets/logout.png', // Replace with your logout image path
+                      width: 30,
+                      height: 30,
+                      fit: BoxFit.contain,
+                    )
+                  : Icon(icon, size: 30, color: Colors.white),
+            ],
+          ),
+        ),
       ),
     );
   }
