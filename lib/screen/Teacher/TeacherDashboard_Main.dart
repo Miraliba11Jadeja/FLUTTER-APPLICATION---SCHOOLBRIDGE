@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:school_bridge_app/screen/Admin/TeacherListScreen.dart';
+import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
+import 'package:school_bridge_app/screen/Teacher/Attendance_Screen.dart';
+import 'package:school_bridge_app/screen/Teacher/HolidayTeacherScreen.dart';
 
-class TeacherDashboardScreen extends StatelessWidget {
+class TeacherDashboardScreenMain extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,7 +20,7 @@ class TeacherDashboardScreen extends StatelessWidget {
               fit: BoxFit.contain,
             ),
           ),
-        ),    
+        ),
         title: Text('Dashboard'),
       ),
       body: Padding(
@@ -29,28 +31,48 @@ class TeacherDashboardScreen extends StatelessWidget {
           mainAxisSpacing: 20,
           children: [
             _buildDashboardItem(
-              imagePath: 'assets/add.png', // Path to your "Teacher" image
-              label: "TEACHER",
+              imagePath: 'assets/SUB.png', // Path to your "Teacher" image
+              label: "PROFILE",
               onTap: () {
                 // Navigate to Teacher List Section
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TeacherListScreen(),
+                    builder: (context) => EditTeacher(),
                   ),
                 );
               },
             ),
             _buildDashboardItem(
+              imagePath: 'assets/attendance.png', // Path to your "Holidays" image
+              label: "ATTENDANCE",
+              onTap: () {
+                // Navigate to Holidays Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AttendanceScreen(),
+                  ),
+                );
+              },
+            ),
+            
+            _buildDashboardItem(
               imagePath: 'assets/holidays.png', // Path to your "Holidays" image
               label: "HOLIDAYS",
               onTap: () {
                 // Navigate to Holidays Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HolidayTeacherScreen(),
+                  ),
+                );
               },
             ),
             _buildDashboardItem(
-              imagePath: 'assets/teacher.png', // Path to your "Subject" image
-              label: "SUBJECT",
+              imagePath: 'assets/score.png', // Path to your "Subject" image
+              label: "MARKS",
               onTap: () {
                 // Navigate to Subject Section
               },

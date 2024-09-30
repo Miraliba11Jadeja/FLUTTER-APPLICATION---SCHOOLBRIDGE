@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:school_bridge_app/screen/Admin/AdminManageScreen.dart';
 import 'dart:math';
 
 import 'package:school_bridge_app/screen/Admin/ForgotScreen.dart';
+import 'package:school_bridge_app/screen/Teacher/TeacherDashboard_Main.dart';
 
 void main() {
   runApp(SchoolBridgeApp());
@@ -134,7 +134,7 @@ class _LoginPageState extends State<TeacherLoginPage> {
                           // For now, let's navigate to the dashboard screen
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => AdminManageScreen()),
+                            MaterialPageRoute(builder: (context) => TeacherDashboardScreenMain()),
                           );
                         },
                         child: Text(
