@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
 import 'package:school_bridge_app/screen/Teacher/Attendance_Screen.dart';
 import 'package:school_bridge_app/screen/Teacher/HolidayTeacherScreen.dart';
+import 'package:school_bridge_app/screen/Teacher/MarksTeacherScreen.dart';
 
 class TeacherDashboardScreenMain extends StatelessWidget {
   @override
@@ -75,6 +76,12 @@ class TeacherDashboardScreenMain extends StatelessWidget {
               label: "MARKS",
               onTap: () {
                 // Navigate to Subject Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MarksScreen(),
+                  ),
+                );
               },
             ),
             _buildDashboardItem(

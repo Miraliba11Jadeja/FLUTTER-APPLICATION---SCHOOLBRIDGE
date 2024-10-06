@@ -3,6 +3,7 @@ import 'package:school_bridge_app/screen/Admin/AdminManageScreen.dart';
 import 'dart:math';
 
 import 'package:school_bridge_app/screen/Admin/ForgotScreen.dart';
+import 'StudentDashboardScreen.dart';
 
 void main() {
   runApp(SchoolBridgeApp());
@@ -134,7 +135,7 @@ class _LoginPageState extends State<StudentLoginPage> {
                           // For now, let's navigate to the dashboard screen
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => AdminManageScreen()),
+                            MaterialPageRoute(builder: (context) => StudentDashboardScreen()),
                           );
                         },
                         child: Text(
