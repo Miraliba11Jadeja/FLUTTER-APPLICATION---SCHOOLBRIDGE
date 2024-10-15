@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:school_bridge_app/screen/Admin/AdminManageScreen.dart';
-import 'dart:math';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:school_bridge_app/screen/Admin/ForgotScreen.dart';
 
-void main() {
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Initialize Firebase
   runApp(SchoolBridgeApp());
 }
 
@@ -23,10 +27,69 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
+final FirebaseAuth _auth = FirebaseAuth.instance;
+
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+Future<void> _login() async {
+  String Username = _usernameController.text.trim();
+  String Password = _passwordController.text.trim();
+
+  // Input validation
+  if (Username.isEmpty || Password.isEmpty) {
+    _showErrorDialog('Please enter both username and password.');
+    return;
+  }
+
+  try {
+    // Sign in the user using Firebase Authentication
+    UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: Username,
+      password: Password,
+    );
+
+    // If sign in is successful, check Firestore for admin email
+    var adminCollection = _firestore.collection('Admin');
+    var adminQuery = await adminCollection.where('Email', isEqualTo: Username).get();
+
+    if (adminQuery.docs.isNotEmpty) {
+      // Proceed to AdminManageScreen if the user is in the Admin collection
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AdminManageScreen()),
+      );
+    } else {
+      // Log out the user if not found in Admin collection
+      await FirebaseAuth.instance.signOut();
+      _showErrorDialog('You are not authorized to access this application.');
+    }
+  } catch (e) {
+    // Catch and display errors during the process
+    _showErrorDialog('An error occurred: $e');
+    print(e);
+  }
+}
+
+  // Error dialog function
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Okay'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,23 +119,23 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
             ),
-            SizedBox(height : 80),
+            SizedBox(height: 80),
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(20.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Username Field with Underline
+                    // Username Field
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 25.0),
                       child: TextField(
                         controller: _usernameController,
                         decoration: InputDecoration(
-                          labelText: 'Username',
+                          labelText: 'Username (Email)',
                           hintText: 'Enter your username',
                           prefixIcon: Icon(Icons.person),
-                          border: InputBorder.none, // No border, only underline
+                          border: InputBorder.none,
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: Colors.grey),
                           ),
@@ -83,8 +146,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 15.0),
-      
-                    // Password Field with Underline
+
+                    // Password Field
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 25.0),
                       child: TextField(
@@ -93,7 +156,6 @@ class _LoginPageState extends State<LoginPage> {
                         decoration: InputDecoration(
                           labelText: 'Password',
                           hintText: 'Enter your password',
-      
                           prefixIcon: Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -101,11 +163,11 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureText = !_obscureText;
+                                _obscureText = !_obscureText; // Toggle password visibility
                               });
                             },
                           ),
-                          border: InputBorder.none, // No border, only underline
+                          border: InputBorder.none,
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: Colors.grey),
                           ),
@@ -116,7 +178,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 20.0),
-      
+
                     // Login Button
                     Container(
                       width: double.infinity,
@@ -129,14 +191,7 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(8.0),
                           ),
                         ),
-                        onPressed: () {
-                          // Perform login validation here
-                          // For now, let's navigate to the dashboard screen
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => AdminManageScreen()),
-                          );
-                        },
+                        onPressed: _login,
                         child: Text(
                           'Login',
                           style: TextStyle(fontSize: 18.0),
@@ -144,15 +199,14 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     SizedBox(height: 15.0),
-      
+
                     // Forgot Password Link
                     TextButton(
                       onPressed: () {
-                            // Handle forgot password action here
-                            Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ForgetScreen()),
-                            );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ForgetScreen()),
+                        );
                       },
                       child: Text(
                         'Forgot Password?',
@@ -170,6 +224,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
+// Custom triangle clipper for the logo
 class InvertedTriangleClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
@@ -183,20 +238,4 @@ class InvertedTriangleClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-class DashboardScreen extends StatelessWidget{
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Dashboard'),
-      ),
-      body: Center(
-        child: Text(
-          'Welcome to the Dashboard!',
-          style: TextStyle(fontSize: 24.0),
-        ),
-      ),
-    );
-  }
 }

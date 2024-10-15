@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:school_bridge_app/screen/Admin/AdminManageScreen.dart';
-import 'dart:math';
-
 import 'package:school_bridge_app/screen/Admin/ForgotScreen.dart';
 import 'StudentDashboardScreen.dart';
 

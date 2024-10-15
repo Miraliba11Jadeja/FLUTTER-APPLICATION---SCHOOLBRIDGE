@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "249580711748",
+    "project_id": "schoolbridge-6df8d",
+    "storage_bucket": "schoolbridge-6df8d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:249580711748:android:676a5fb7bf1a532c3d7111",
+        "android_client_info": {
+          "package_name": "com.example.school_bridge_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzqdeDQI29yF7WLxbPkr3Wfniwq2uJnUY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
