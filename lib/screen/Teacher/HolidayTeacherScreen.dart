@@ -30,6 +30,9 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
   DateTime? selectedDate;
   String formattedDate = '';
 
+  // Declare a GlobalKey for the Scaffold
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   void _showDeleteDialog(int index) {
     showDialog(
       context: context,
@@ -40,7 +43,8 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog and keep the holiday
+                Navigator.of(context)
+                    .pop(); // Close the dialog and keep the holiday
               },
               child: Text('Keep'),
             ),
@@ -78,9 +82,8 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
                 child: AbsorbPointer(
                   child: TextField(
                     decoration: InputDecoration(
-                      labelText: formattedDate.isEmpty
-                          ? 'Select Date'
-                          : formattedDate,
+                      labelText:
+                          formattedDate.isEmpty ? 'Select Date' : formattedDate,
                     ),
                   ),
                 ),
@@ -96,7 +99,8 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
             ),
             TextButton(
               onPressed: () {
-                if (nameController.text.isNotEmpty && formattedDate.isNotEmpty) {
+                if (nameController.text.isNotEmpty &&
+                    formattedDate.isNotEmpty) {
                   setState(() {
                     holidays.add({
                       'name': nameController.text,
@@ -134,6 +138,7 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, // Assign the GlobalKey to the Scaffold
       appBar: AppBar(
         backgroundColor: Color(0xFF134B70),
         title: Text('HOLIDAY'),
@@ -147,10 +152,47 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
           IconButton(
             icon: Icon(Icons.menu),
             onPressed: () {
-              // Handle menu press
+              // Use the GlobalKey to open the end drawer
+              _scaffoldKey.currentState?.openEndDrawer();
             },
           ),
         ],
+      ),
+      endDrawer: Container(
+        width: MediaQuery.of(context).size.width * 0.6,
+        child: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              Container(
+                height: 100,
+                child: DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF134B70),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              buildDrawerItem(context, 'assets/SUB.png', 'Profile'),
+              buildDrawerItem(context, 'assets/attendance.png', 'Attendance'),
+              buildDrawerItem(context, 'assets/timetable.png', 'Schedule'),
+              buildDrawerItem(context, 'assets/chat.png', 'Feedback'),
+              buildDrawerItem(context, 'assets/calendar.png', 'Event'),
+              buildDrawerItem(
+                  context, 'assets/loudspeaker.png', 'Announcement'),
+              buildDrawerItem(context, 'assets/holidays.png', 'Holiday'),
+              buildDrawerItem(context, 'assets/score.png', 'Marks'),
+            ],
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -174,6 +216,16 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
         backgroundColor: Color(0xFF134B70),
         child: Icon(Icons.add, size: 40),
       ),
+    );
+  }
+
+  ListTile buildDrawerItem(BuildContext context, String asset, String title) {
+    return ListTile(
+      leading: Image.asset(asset, width: 30, height: 30),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+      onTap: () {
+        Navigator.of(context).pop();
+      },
     );
   }
 }
