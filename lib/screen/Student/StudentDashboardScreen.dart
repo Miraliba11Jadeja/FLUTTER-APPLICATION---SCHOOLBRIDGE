@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'student_profile_screen.dart'; // Import the StudentProfileScreen
+import 'student_profile_screen.dart'; // Import the StudentProfileScreen
 
 class StudentDashboardScreen extends StatelessWidget {
   const StudentDashboardScreen({super.key});
@@ -15,12 +15,12 @@ class StudentDashboardScreen extends StatelessWidget {
             icon: const Icon(Icons.person), // Profile Icon
             onPressed: () {
               // Navigate to StudentProfileScreen when profile icon is clicked
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => const StudentProfileScreen(),
-              //   ),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const StudentProfileScreen(),
+                ),
+              );
             },
           ),
         ],
@@ -127,12 +127,12 @@ class StudentDashboardScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         if (label == 'PROFILE') {
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => const StudentProfileScreen(),
-          //   ),
-          // );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const StudentProfileScreen(),
+            ),
+          );
         }
         // Handle other icons if needed
       },

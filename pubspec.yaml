@@ -42,7 +42,11 @@ dependencies:
   firebase_core: ^2.24.2
   firebase_auth: ^4.16.0
   cloud_firestore: ^4.14.0
+<<<<<<< HEAD
   firebase_storage: ^11.6.0
+=======
+  table_calendar: ^3.0.8
+>>>>>>> 1e369900108fddad117f35e5171536621389cad0
 
 dev_dependencies:
   flutter_test:
