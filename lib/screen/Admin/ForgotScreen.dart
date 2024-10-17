@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -9,9 +11,10 @@ class ForgetScreen extends StatefulWidget {
 class _ForgetScreenState extends State<ForgetScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
-  final TextEditingController _idNumberController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
 
   DateTime? _selectedDate;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -69,18 +72,17 @@ class _ForgetScreenState extends State<ForgetScreen> {
             ),
             SizedBox(height: 20.0),
 
-            // ID Number Field
+            // Username Field
             TextField(
-              controller: _idNumberController,
+              controller: _usernameController,
               decoration: InputDecoration(
-                labelText: 'ID Number',
-                hintText: 'Enter your ID number',
+                labelText: 'Username',
+                hintText: 'Enter your username',
                 prefixIcon: Icon(Icons.perm_identity),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
-              keyboardType: TextInputType.number,
             ),
             SizedBox(height: 40.0),
 
@@ -108,20 +110,37 @@ class _ForgetScreenState extends State<ForgetScreen> {
     );
   }
 
-  void _fetchPassword() {
-    String name = _nameController.text;
-    String dob = _dobController.text;
-    String idNumber = _idNumberController.text;
+  void _fetchPassword() async {
+    String name = _nameController.text.trim();
+    String dob = _dobController.text.trim();
+    String username = _usernameController.text.trim();
 
-    if (name.isEmpty || dob.isEmpty || idNumber.isEmpty) {
-      _showAlertDialog('Error', 'Please fill in all fields');
+    if (name.isEmpty || dob.isEmpty || username.isEmpty) {
+      _showAlertDialog('Error', 'Please fill in all fields.');
       return;
     }
 
-    // Here you can add the logic to fetch password based on the entered details.
-    // For now, we are showing a success dialog for demonstration.
+    try {
+      // Fetch user data from Firestore based on the entered details
+      var userQuery = await _firestore.collection('Admin')
+          .where('Username', isEqualTo: username)
+          .where('Name', isEqualTo: name)
+          .where('DOB', isEqualTo: dob)
+          .get();
 
-    _showAlertDialog('Success', 'Password has been sent to your email!');
+      if (userQuery.docs.isNotEmpty) {
+        var userDocument = userQuery.docs.first;
+        String email = userDocument['Email'];
+
+        // Send password reset email
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+        _showAlertDialog('Success', 'A password reset link has been sent to your email: $email.');
+      } else {
+        _showAlertDialog('Error', 'No matching user found for the provided details.');
+      }
+    } catch (e) {
+      _showAlertDialog('Error', 'An error occurred: $e');
+    }
   }
 
   void _showAlertDialog(String title, String message) {
