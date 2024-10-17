@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:firebase_storage/firebase_storage.dart'; // Import Firebase Storage
 
 class AdminProfileScreen extends StatefulWidget {
   @override
@@ -81,6 +81,39 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     }
   }
 
+  Future<void> _uploadImageToStorage(String adminId) async {
+  if (_profileImage == null) return;
+
+  try {
+    // Create a reference to the location in Firebase Storage
+    String fileName = 'admin_${adminId}_profile_image.jpg';  // Fix: Use the adminId value correctly
+    Reference storageRef = FirebaseStorage.instance.ref().child('profileImages/$fileName');
+
+    // Upload the image file
+    UploadTask uploadTask = storageRef.putFile(_profileImage!);
+    TaskSnapshot snapshot = await uploadTask;
+
+    // Get the image URL after upload
+    String imageUrl = await snapshot.ref.getDownloadURL();
+
+    // Update the Firestore database with the new image URL
+    await FirebaseFirestore.instance.collection('Admin').doc(adminId).update({
+      'Image': imageUrl,
+    });
+
+    setState(() {
+      _profileImageUrl = imageUrl;  // Update the local variable with the new image URL
+    });
+
+    // Notify the user of the successful upload
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Profile image updated successfully!')));
+  } catch (e) {
+    print(e);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload image')));
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,11 +142,13 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
           // Assuming you're working with a single admin document
           var adminData = snapshot.data!.docs.first; // Get the first document in the 'admin' collection
-           _profileImageUrl = adminData['Image'];
+          String adminId = adminData.id; // Store admin ID for future updates
+          _profileImageUrl = adminData['Image'];
+
           // Update text field controllers with Firestore data
-          nameController.text = adminData['Name'] ?? '';   // Set the fetched name
-          emailController.text = adminData['Email'] ?? ''; // Set the fetched email
-          dobController.text = adminData['DOB'] ?? '';     // Set the fetched DOB
+          nameController.text = adminData['Name'] ?? '';   
+          emailController.text = adminData['Email'] ?? ''; 
+          dobController.text = adminData['DOB'] ?? '';     
           contactController.text = adminData['Contact'] ?? '';
           genderController.text = adminData['Gender'] ?? '';
           aadharController.text = adminData['Aadhar'] ?? '';
@@ -130,22 +165,22 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               child: Column(
                 children: [
                   // Profile Picture Section
-                 CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage: _profileImage != null 
-                      ? FileImage(_profileImage!) 
-                      : (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) 
-                          ? NetworkImage(_profileImageUrl!) as ImageProvider
-                          : null,
-                  child: _profileImage == null && (_profileImageUrl == null || _profileImageUrl!.isEmpty)
-                      ? Icon(Icons.person, size: 60, color: Colors.white)
-                      : null,
-                ),
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage: _profileImage != null 
+                        ? FileImage(_profileImage!) 
+                        : (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) 
+                            ? NetworkImage(_profileImageUrl!) as ImageProvider
+                            : null,
+                    child: _profileImage == null && (_profileImageUrl == null || _profileImageUrl!.isEmpty)
+                        ? Icon(Icons.person, size: 60, color: Colors.white)
+                        : null,
+                  ),
                   SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
-                      _showImageSourceActionSheet(context);
+                      _showImageSourceActionSheet(context, adminId);
                     },
                     style: ElevatedButton.styleFrom(
                       primary: Colors.white,
@@ -180,26 +215,26 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                       setState(() {
                         if (isEditing) {
                           // Save the updated data
-                          FirebaseFirestore.instance.collection('admin').doc(adminData.id).update({
-                            'name': nameController.text,
-                            'email': emailController.text,
-                            'dob': dobController.text,
-                            'contactNo': contactController.text,
-                            'gender': genderController.text,
-                            'aadharNo': aadharController.text,
-                            'permanentAddress': permanentAddressController.text,
-                            'city': cityController.text,
-                            'state': stateController.text,
-                            'pinCode': pinCodeController.text,
-                            'presentAddress': presentAddressController.text,
-                            'country': countryController.text,
+                          FirebaseFirestore.instance.collection('Admin').doc(adminId).update({
+                            'Name': nameController.text,
+                            'Email': emailController.text,
+                            'DOB': dobController.text,
+                            'Contact': contactController.text,
+                            'Gender': genderController.text,
+                            'Aadhar': aadharController.text,
+                            'PermanentA': permanentAddressController.text,
+                            'City': cityController.text,
+                            'State': stateController.text,
+                            'Pincode': pinCodeController.text,
+                            'PresentA': presentAddressController.text,
+                            'Country': countryController.text,
                           });
                         }
                         isEditing = !isEditing; // Toggle the editing state
                       });
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF134B70), // Background color of the button
+                      backgroundColor: Color(0xFF134B70), 
                       padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -219,7 +254,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     );
   }
 
-  void _showImageSourceActionSheet(BuildContext context) {
+  void _showImageSourceActionSheet(BuildContext context, String adminId) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -228,18 +263,20 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
             children: [
               ListTile(
                 leading: Icon(Icons.photo_library),
-                title: Text('Gallery'),
-                onTap: () {
-                  _pickImage(ImageSource.gallery);
+                title: Text('Choose from Gallery'),
+                onTap: () async {
                   Navigator.of(context).pop();
+                  await _pickImage(ImageSource.gallery);
+                  await _uploadImageToStorage(adminId); // Upload the selected image
                 },
               ),
               ListTile(
                 leading: Icon(Icons.photo_camera),
-                title: Text('Camera'),
-                onTap: () {
-                  _pickImage(ImageSource.camera);
+                title: Text('Take a Photo'),
+                onTap: () async {
                   Navigator.of(context).pop();
+                  await _pickImage(ImageSource.camera);
+                  await _uploadImageToStorage(adminId); // Upload the captured image
                 },
               ),
             ],
@@ -249,64 +286,86 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     );
   }
 
-  // Helper function to build section title
+  // Helper widget to build a title for sections
   Widget buildSectionTitle(String title) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Color(0xFF134B70),
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Text(
-        title,
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
+          title,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
       ),
     );
   }
 
-  // Helper function to build a row of details with two items per row
-  Widget buildDetailsRow(String label1, TextEditingController controller1, String label2, TextEditingController controller2) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // First Column (Label1 and Value1)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label1,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+  // Helper widget to build a row of details with editable text fields
+ Widget buildDetailsRow(String label1, TextEditingController controller1, String label2, TextEditingController controller2) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8.0),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // First Column (Label1 and Value1)
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label1,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,  // Bold field label
+                  fontSize: 16,                 // Adjust font size if needed
                 ),
-                isEditing
-                    ? TextField(controller: controller1)
-                    : Text(controller1.text),
-              ],
-            ),
+              ),
+              SizedBox(height: 8),  // Space between label and value
+              isEditing
+                  ? TextField(
+                      controller: controller1,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,  // No border for TextField
+                      ),
+                    )
+                  : Text(
+                      controller1.text,
+                      style: TextStyle(fontSize: 16),  // Style the value text if needed
+                    ),
+            ],
           ),
-          
-          SizedBox(width: 20), // Space between the two columns
-          
-          // Second Column (Label2 and Value2)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label2,
-                  style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        
+        SizedBox(width: 20), // Space between the two columns
+        
+        // Second Column (Label2 and Value2)
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label2,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,  // Bold field label
+                  fontSize: 16,                 // Adjust font size if needed
                 ),
-                isEditing
-                    ? TextField(controller: controller2)
-                    : Text(controller2.text),
-              ],
-            ),
+              ),
+              SizedBox(height: 8),  // Space between label and value
+              isEditing
+                  ? TextField(
+                      controller: controller2,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,  // No border for TextField
+                      ),
+                    )
+                  : Text(
+                      controller2.text,
+                      style: TextStyle(fontSize: 16),  // Style the value text if needed
+                    ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 }
