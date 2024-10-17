@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:school_bridge_app/screen/Admin/AdminProfileScreen.dart';
 import 'package:school_bridge_app/screen/Admin/GeneralDashboardScreen.dart';
 import 'package:school_bridge_app/screen/Admin/StudentDashboardScreen.dart';
 import 'package:school_bridge_app/screen/Admin/TeacherDashboardSCreen.dart';
 import 'package:school_bridge_app/screen/LoginAs.dart';
 
-
 class AdminManageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Replace back icon with custom image
         leading: GestureDetector(
           onTap: () {
             Navigator.of(context).pop();
@@ -19,28 +18,48 @@ class AdminManageScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Image.asset(
-              'assets/back.png', // Make sure the path is correct
+              'assets/back.png',
               fit: BoxFit.contain,
             ),
           ),
         ),
-
         title: Text('Welcome, AdminName'),
         backgroundColor: Color(0xFF134B70),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20.0),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => AdminProfileScreen()),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection('Admin').snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey[300],
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                var adminData = snapshot.data!.docs.first; // Get the first document
+                String profileImageUrl = adminData['profileImageUrl'] ?? '';
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => AdminProfileScreen()),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage: profileImageUrl.isNotEmpty
+                        ? NetworkImage(profileImageUrl)
+                        : null,
+                    child: profileImageUrl.isEmpty
+                        ? Icon(Icons.person, size: 30, color: Colors.white)
+                        : null,
+                  ),
                 );
               },
-              child: CircleAvatar(
-                radius: 20, // smaller size for the app bar
-                backgroundColor: Colors.grey[300],
-                child: Icon(Icons.person, size: 30, color: Colors.white),
-              ),
             ),
           ),
         ],
@@ -69,11 +88,11 @@ class AdminManageScreen extends StatelessWidget {
                   ),
                   // Image with semi-transparency
                   Opacity(
-                    opacity: 0.8, // Set opacity to make the background color visible
+                    opacity: 0.8,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Image.asset(
-                        'assets/web-design1.jpg', // Add your image here
+                        'assets/web-design1.jpg',
                         width: double.infinity,
                         height: 150,
                         fit: BoxFit.cover,
@@ -103,7 +122,7 @@ class AdminManageScreen extends StatelessWidget {
                   AdminButton(
                     icon: Icons.person,
                     text: "STUDENTS",
-                     onTap: () {
+                    onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (context) => StudentDashboardScreen()),
                       );
@@ -113,7 +132,7 @@ class AdminManageScreen extends StatelessWidget {
                   AdminButton(
                     icon: Icons.home,
                     text: "GENERAL",
-                     onTap: () {
+                    onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (context) => GeneralDashboardScreen()),
                       );
@@ -125,16 +144,15 @@ class AdminManageScreen extends StatelessWidget {
 
             // Logout Button
             AdminButton(
-  icon: Icons.logout,
-  text: "LOGOUT",
-  onTap: () {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => LoginAs()),
-    );
-  },
-  isLogout: true,
-),
-
+              icon: Icons.logout,
+              text: "LOGOUT",
+              onTap: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => LoginAs()),
+                );
+              },
+              isLogout: true,
+            ),
           ],
         ),
       ),

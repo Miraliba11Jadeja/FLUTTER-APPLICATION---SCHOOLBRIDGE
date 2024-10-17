@@ -98,7 +98,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
     // Update the Firestore database with the new image URL
     await FirebaseFirestore.instance.collection('Admin').doc(adminId).update({
-      'Image': imageUrl,
+      'profileImageUrl': imageUrl,
     });
 
     setState(() {
@@ -143,7 +143,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
           // Assuming you're working with a single admin document
           var adminData = snapshot.data!.docs.first; // Get the first document in the 'admin' collection
           String adminId = adminData.id; // Store admin ID for future updates
-          _profileImageUrl = adminData['Image'];
+          _profileImageUrl = adminData['profileImageUrl'];
 
           // Update text field controllers with Firestore data
           nameController.text = adminData['Name'] ?? '';   
