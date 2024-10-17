@@ -41,7 +41,7 @@ Future<void> _login() async {
 
   // Input validation
   if (Username.isEmpty || Password.isEmpty) {
-    _showErrorDialog('Please enter both username and password.');
+    _showErrorDialog('Please enter both email and password.');
     return;
   }
 
@@ -67,10 +67,18 @@ Future<void> _login() async {
       await FirebaseAuth.instance.signOut();
       _showErrorDialog('You are not authorized to access this application.');
     }
+  } on FirebaseAuthException catch (e) {
+    // Handle specific Firebase auth errors
+    if (e.code == 'user-not-found') {
+      _showErrorDialog('No user found with this email.');
+    } else if (e.code == 'wrong-password') {
+      _showErrorDialog('Incorrect password. Please try again.');
+    } else {
+      _showErrorDialog('An error occurred: ${e.message}');
+    }
   } catch (e) {
-    // Catch and display errors during the process
+    // Catch any other errors during the process
     _showErrorDialog('An error occurred: $e');
-    print(e);
   }
 }
 
@@ -132,8 +140,8 @@ Future<void> _login() async {
                       child: TextField(
                         controller: _usernameController,
                         decoration: InputDecoration(
-                          labelText: 'Username (Email)',
-                          hintText: 'Enter your username',
+                          labelText: 'Email',
+                          hintText: 'Enter your Email',
                           prefixIcon: Icon(Icons.person),
                           border: InputBorder.none,
                           enabledBorder: UnderlineInputBorder(

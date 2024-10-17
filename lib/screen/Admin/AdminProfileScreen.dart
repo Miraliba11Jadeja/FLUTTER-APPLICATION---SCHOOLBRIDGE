@@ -109,7 +109,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
           // Assuming you're working with a single admin document
           var adminData = snapshot.data!.docs.first; // Get the first document in the 'admin' collection
-
+           _profileImageUrl = adminData['Image'];
           // Update text field controllers with Firestore data
           nameController.text = adminData['Name'] ?? '';   // Set the fetched name
           emailController.text = adminData['Email'] ?? ''; // Set the fetched email
@@ -130,14 +130,18 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
               child: Column(
                 children: [
                   // Profile Picture Section
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
-                    child: _profileImage == null
-                        ? Icon(Icons.person, size: 60, color: Colors.white)
-                        : null,
-                  ),
+                 CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey[300],
+                  backgroundImage: _profileImage != null 
+                      ? FileImage(_profileImage!) 
+                      : (_profileImageUrl != null && _profileImageUrl!.isNotEmpty) 
+                          ? NetworkImage(_profileImageUrl!) as ImageProvider
+                          : null,
+                  child: _profileImage == null && (_profileImageUrl == null || _profileImageUrl!.isEmpty)
+                      ? Icon(Icons.person, size: 60, color: Colors.white)
+                      : null,
+                ),
                   SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {
