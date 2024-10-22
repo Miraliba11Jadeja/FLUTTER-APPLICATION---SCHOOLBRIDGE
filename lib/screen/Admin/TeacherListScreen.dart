@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:school_bridge_app/screen/Admin/AddTeacher.dart';
 import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
 
@@ -8,21 +9,13 @@ class TeacherListScreen extends StatefulWidget {
 }
 
 class _TeacherListScreenState extends State<TeacherListScreen> {
-  List<Map<String, String>> teachers = [
-    {"name": "ABCD", "subject": "Hindi", "classes": "2, 3, 4"},
-    {"name": "EFGH", "subject": "Math", "classes": "5, 6, 7"},
-    {"name": "IJKL", "subject": "English", "classes": "8, 9, 10"},
-  ];
-
   // Function to delete a teacher after confirmation
-  void _deleteTeacher(int index) {
-    setState(() {
-      teachers.removeAt(index); // Remove the teacher at the given index
-    });
+  void _deleteTeacher(String docId) {
+    FirebaseFirestore.instance.collection('teachers').doc(docId).delete();
   }
 
   // Function to show confirmation dialog
-  void _showDeleteConfirmationDialog(BuildContext context, int index) {
+  void _showDeleteConfirmationDialog(BuildContext context, String docId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -38,7 +31,7 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
             ),
             TextButton(
               onPressed: () {
-                _deleteTeacher(index); // Call delete function
+                _deleteTeacher(docId); // Call delete function
                 Navigator.of(context).pop(); // Close the dialog
               },
               child: Text('Delete', style: TextStyle(color: Colors.red)),
@@ -66,6 +59,7 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
               fit: BoxFit.contain,
             ),
           ),
+          
         ),
         actions: [
           Builder(
@@ -81,14 +75,13 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
         ],
       ),
       endDrawer: Container(
-        width: MediaQuery.of(context).size.width * 0.6, // Set drawer width to 60% of the screen width
+        width: MediaQuery.of(context).size.width * 0.6,
         child: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
               Container(
                 height: 100,
-                width: 40, // Adjust the height as needed
                 child: DrawerHeader(
                   decoration: BoxDecoration(
                     color: Color(0xFF134B70),
@@ -104,132 +97,103 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                   ),
                 ),
               ),
-              ListTile(
-                leading: Image.asset('assets/teacher.png', width: 30, height: 30),
-                title: Text('Teachers', style: TextStyle(fontWeight: FontWeight.bold)),
-                onTap: () {
-                  Navigator.of(context).pop(); // Close drawer on tap
-                },
-              ),
-              ListTile(
-                leading: Image.asset('assets/add.png', width: 30, height: 30),
-                title: Text('Subject', style: TextStyle(fontWeight: FontWeight.bold)),
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                leading: Image.asset('assets/timetable.png', width: 30, height: 30),
-                title: Text('Schedule', style: TextStyle(fontWeight: FontWeight.bold)),
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                leading: Image.asset('assets/chat.png', width: 30, height: 30),
-                title: Text('Feedback', style: TextStyle(fontWeight: FontWeight.bold)),
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                leading: Image.asset('assets/calendar.png', width: 30, height: 30),
-                title: Text('Event', style: TextStyle(fontWeight: FontWeight.bold)),
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                leading: Image.asset('assets/loudspeaker.png', width: 30, height: 30),
-                title: Text('Announcement', style: TextStyle(fontWeight: FontWeight.bold)),
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              ListTile(
-                leading: Image.asset('assets/holidays.png', width: 30, height: 30),
-                title: Text('Holiday', style: TextStyle(fontWeight: FontWeight.bold)),
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-              ),
+              buildDrawerItem(context, 'assets/teacher.png', 'Teachers'),
+              buildDrawerItem(context, 'assets/add.png', 'Subject'),
+              buildDrawerItem(context, 'assets/timetable.png', 'Schedule'),
+              buildDrawerItem(context, 'assets/chat.png', 'Feedback'),
+              buildDrawerItem(context, 'assets/calendar.png', 'Event'),
+              buildDrawerItem(context, 'assets/loudspeaker.png', 'Announcement'),
+              buildDrawerItem(context, 'assets/holidays.png', 'Holiday'),
             ],
           ),
         ),
       ),
-      body: ListView.builder(
-        padding: EdgeInsets.all(16.0),
-        itemCount: teachers.length,
-        itemBuilder: (context, index) {
-          final teacher = teachers[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-                side: BorderSide(
-                  color: Colors.blue.shade200,
-                  width: 1,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(15.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "NAME: ${teacher['name']}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('Teacher').snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          final teacherDocs = snapshot.data!.docs;
+
+          return ListView.builder(
+            padding: EdgeInsets.all(16.0),
+            itemCount: teacherDocs.length,
+            itemBuilder: (context, index) {
+              final teacherData = teacherDocs[index].data() as Map<String, dynamic>;
+              final docId = teacherDocs[index].id; // Get document ID
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    side: BorderSide(
+                      color: Colors.blue.shade200,
+                      width: 1,
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      "SUBJECT NAME: ${teacher['subject']}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      "CLASS: ${teacher['classes']}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            // Navigate to TeacherProfileScreen
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => EditTeacher()),
-                            );
-                          },
+                        Text(
+                          "NAME: ${teacherData['Name']}",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            // Show confirmation dialog before deleting
-                            _showDeleteConfirmationDialog(context, index);
-                          },
+                        SizedBox(height: 4),
+                        Text(
+                          "SUBJECTS: ${teacherData['Subjects'].join(', ')}", // Joining the subjects array
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "CLASSES: ${teacherData['Class'].join(', ')}", // Joining the classes array
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                // Navigate to EditTeacher screen
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => EditTeacher()),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                // Show confirmation dialog before deleting
+                                _showDeleteConfirmationDialog(context, docId);
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           );
         },
       ),
@@ -237,13 +201,22 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
         onPressed: () {
           // Handle add teacher action
           Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => AddTeacher()),
+            context,
+            MaterialPageRoute(builder: (context) => AddTeacher()),
           );
         },
         child: Icon(Icons.add),
         backgroundColor: Color(0xFF134B70),
       ),
+    );
+  }
+  ListTile buildDrawerItem(BuildContext context, String asset, String title) {
+    return ListTile(
+      leading: Image.asset(asset, width: 30, height: 30),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+      onTap: () {
+        Navigator.of(context).pop();
+      },
     );
   }
 }

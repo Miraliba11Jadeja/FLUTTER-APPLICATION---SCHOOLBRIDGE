@@ -28,43 +28,43 @@ class StudentDashboardScreen extends StatelessWidget {
           mainAxisSpacing: 20,
           children: [
             _buildDashboardItem(
-              imagePath: 'assets/add.png', // Path to your image
-              label: "TEACHER",
+              imagePath: 'assets/students.png', // Path to your image
+              label: "STUDENTS",
               onTap: () {
                 // Navigate to Teacher Section
-              },
-            ),
-            _buildDashboardItem(
-              imagePath: 'assets/holidays.png', // Path to your image
-              label: "HOLIDAYS",
-              onTap: () {
-                // Navigate to Holidays Section
-              },
-            ),
-            _buildDashboardItem(
-              imagePath: 'assets/teacher.png', // Path to your image
-              label: "SUBJECT",
-              onTap: () {
-                // Navigate to Subject Section
               },
             ),
             _buildDashboardItem(
               imagePath: 'assets/timetable.png', // Path to your image
               label: "SCHEDULE",
               onTap: () {
-                // Navigate to Schedule Section
-              },
-            ),
-            _buildDashboardItem(
-              imagePath: 'assets/chat.png', // Path to your image
-              label: "FEEDBACK",
-              onTap: () {
-                // Navigate to Feedback Section
+                // Navigate to Holidays Section
               },
             ),
             _buildDashboardItem(
               imagePath: 'assets/calendar.png', // Path to your image
               label: "EVENT",
+              onTap: () {
+                // Navigate to Subject Section
+              },
+            ),
+            _buildDashboardItem(
+              imagePath: 'assets/leave.png', // Path to your image
+              label: "LEAVE",
+              onTap: () {
+                // Navigate to Schedule Section
+              },
+            ),
+            _buildDashboardItem(
+              imagePath: 'assets/exam-time.png', // Path to your image
+              label: "RESULT",
+              onTap: () {
+                // Navigate to Feedback Section
+              },
+            ),
+            _buildDashboardItem(
+              imagePath: 'assets/chat.png', // Path to your image
+              label: "FEEDBACK",
               onTap: () {
                 // Navigate to Event Section
               },
