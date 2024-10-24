@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:school_bridge_app/screen/Admin/AddClassScreen.dart';
 import 'package:school_bridge_app/screen/Admin/AddTeacher.dart';
 import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
 
@@ -142,28 +143,17 @@ class _ClassListScreenState extends State<ClassListScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "Class: ${teacherData['Class']}",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 25,
-                          ),
-                        ),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            IconButton(
-                              icon: Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () {
-                                // Navigate to EditTeacher screen
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => EditTeacher()),
-                                );
-                              },
+                            Text(
+                              "Class: ${teacherData['Class']}",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 25,
+                              ),
                             ),
-                            IconButton(
+                            Text("                                     "),
+                             IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
                               onPressed: () {
                                 // Show confirmation dialog before deleting
@@ -182,16 +172,17 @@ class _ClassListScreenState extends State<ClassListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Handle add teacher action
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddTeacher()),
-          );
-        },
-        child: Icon(Icons.add),
-        backgroundColor: Color(0xFF134B70),
-      ),
+  onPressed: () {
+    // Navigate to AddClassScreen when add button is pressed
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AddClassScreen()),
+    );
+  },
+  child: Icon(Icons.add),
+  backgroundColor: Color(0xFF134B70),
+),
+
     );
   }
 
