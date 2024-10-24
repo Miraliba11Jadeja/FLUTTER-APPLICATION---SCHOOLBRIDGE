@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/Admin/ClassListScreen.dart';
 
 class StudentDashboardScreen extends StatelessWidget {
   @override
@@ -31,7 +32,10 @@ class StudentDashboardScreen extends StatelessWidget {
               imagePath: 'assets/students.png', // Path to your image
               label: "STUDENTS",
               onTap: () {
-                // Navigate to Teacher Section
+               Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ClassListScreen()),
+                          );
               },
             ),
             _buildDashboardItem(

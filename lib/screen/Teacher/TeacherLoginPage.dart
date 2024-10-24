@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:school_bridge_app/screen/Admin/ForgotScreen.dart';
 import 'package:school_bridge_app/screen/Teacher/TeacherDashboard_Main.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Initialize Firebase
   runApp(SchoolBridgeApp());
 }
 
@@ -27,6 +30,72 @@ class _LoginPageState extends State<TeacherLoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscureText = true;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> _login() async {
+  String username = _usernameController.text.trim();
+  String password = _passwordController.text.trim();
+
+  if (username.isEmpty || password.isEmpty) {
+    _showErrorDialog('Please enter both email and password.');
+    return;
+  }
+
+  try {
+    // Sign in the user using Firebase Authentication
+    UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      email: username,
+      password: password,
+    );
+
+    // Check if the email is in the "Teacher" collection
+    var teacherCollection = _firestore.collection('Teacher');
+    var teacherQuery = await teacherCollection.where('Email', isEqualTo: username).get();
+
+    if (teacherQuery.docs.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => TeacherDashboardScreenMain()),
+      );
+    } else {
+      await _auth.signOut();
+      _showErrorDialog('You are not authorized to access this application.');
+    }
+  } on FirebaseAuthException catch (e) {
+    // More detailed error handling
+    if (e.code == 'user-not-found') {
+      _showErrorDialog('No user found with this email.');
+    } else if (e.code == 'wrong-password') {
+      _showErrorDialog('Incorrect password.');
+    } else if (e.code == 'invalid-email') {
+      _showErrorDialog('The email format is invalid.');
+    } else if (e.code == 'user-disabled') {
+      _showErrorDialog('This user has been disabled.');
+    } else {
+      _showErrorDialog('An error occurred: ${e.message}');
+    }
+  } catch (e) {
+    _showErrorDialog('An unexpected error occurred: $e');
+  }
+}
+
+  // Error dialog function
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Okay'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,23 +125,23 @@ class _LoginPageState extends State<TeacherLoginPage> {
                 ),
               ],
             ),
-            SizedBox(height : 80),
+            SizedBox(height: 80),
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(20.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Username Field with Underline
+                    // Username Field
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 25.0),
                       child: TextField(
                         controller: _usernameController,
                         decoration: InputDecoration(
-                          labelText: 'Username',
-                          hintText: 'Enter your username',
+                          labelText: 'Email',
+                          hintText: 'Enter your email',
                           prefixIcon: Icon(Icons.person),
-                          border: InputBorder.none, // No border, only underline
+                          border: InputBorder.none,
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: Colors.grey),
                           ),
@@ -83,8 +152,8 @@ class _LoginPageState extends State<TeacherLoginPage> {
                       ),
                     ),
                     SizedBox(height: 15.0),
-      
-                    // Password Field with Underline
+
+                    // Password Field
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 25.0),
                       child: TextField(
@@ -93,7 +162,6 @@ class _LoginPageState extends State<TeacherLoginPage> {
                         decoration: InputDecoration(
                           labelText: 'Password',
                           hintText: 'Enter your password',
-      
                           prefixIcon: Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -101,11 +169,11 @@ class _LoginPageState extends State<TeacherLoginPage> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureText = !_obscureText;
+                                _obscureText = !_obscureText; // Toggle password visibility
                               });
                             },
                           ),
-                          border: InputBorder.none, // No border, only underline
+                          border: InputBorder.none,
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: Colors.grey),
                           ),
@@ -116,7 +184,7 @@ class _LoginPageState extends State<TeacherLoginPage> {
                       ),
                     ),
                     SizedBox(height: 20.0),
-      
+
                     // Login Button
                     Container(
                       width: double.infinity,
@@ -129,14 +197,7 @@ class _LoginPageState extends State<TeacherLoginPage> {
                             borderRadius: BorderRadius.circular(8.0),
                           ),
                         ),
-                        onPressed: () {
-                          // Perform login validation here
-                          // For now, let's navigate to the dashboard screen
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => TeacherDashboardScreenMain()),
-                          );
-                        },
+                        onPressed: _login,
                         child: Text(
                           'Login',
                           style: TextStyle(fontSize: 18.0),
@@ -144,15 +205,14 @@ class _LoginPageState extends State<TeacherLoginPage> {
                       ),
                     ),
                     SizedBox(height: 15.0),
-      
+
                     // Forgot Password Link
                     TextButton(
                       onPressed: () {
-                            // Handle forgot password action here
-                            Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ForgetScreen()),
-                            );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ForgetScreen()),
+                        );
                       },
                       child: Text(
                         'Forgot Password?',
@@ -184,7 +244,8 @@ class InvertedTriangleClipper extends CustomClipper<Path> {
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
-class DashboardScreen extends StatelessWidget{
+
+class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
