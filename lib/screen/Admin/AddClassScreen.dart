@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class AddClassScreen extends StatefulWidget {
   @override
@@ -16,25 +17,66 @@ class _AddClassScreenState extends State<AddClassScreen> {
   // List of section options
   final List<String> sectionOptions = ['A', 'B', 'C'];
 
-  // Function to add class and section to Firestore
+  // Function to add class and section to Firestore with incremented ID
   Future<void> _addClassToFirestore() async {
     if (_selectedClass == null || _selectedSection == null) {
-      // Show an error if class or section is not selected
       _showErrorDialog('Please select both class and section.');
       return;
     }
 
-    // Create the combined class field like "3A"
-    String classField = _selectedClass! + _selectedSection!;
+    try {
+      // Fetch the latest document in the Class collection by ID
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('Class')
+          .orderBy('ID', descending: true)
+          .limit(1)
+          .get();
 
-    // Add the class and ID to Firestore
-    await FirebaseFirestore.instance.collection('Class').add({
-      'Class': classField,  // Store combined Class and Section like "3A"
-      'ID': _selectedClass, // Store just the Class number in the ID field
-    });
+      int nextID;
+      if (querySnapshot.docs.isEmpty) {
+        // If no documents, start ID from 1
+        nextID = 1;
+      } else {
+        var latestID = querySnapshot.docs.first['ID'];
+        if (latestID is int) {
+          nextID = latestID + 1;
+        } else if (latestID is String) {
+          nextID = int.tryParse(latestID) ?? 1;
+        } else {
+          throw Exception('Unexpected ID type in Firestore.');
+        }
+      }
 
-    Navigator.of(context).pop(); // Close the screen after adding
+      // Combine class and section
+      String classField = _selectedClass! + _selectedSection!;
+
+      // Add the class with incremented ID
+      await FirebaseFirestore.instance.collection('Class').add({
+        'Class': classField,
+        'ID': nextID,
+      });
+
+      Navigator.of(context).pop(); // Close the screen after adding
+    } catch (error) {
+      _showErrorDialog('Failed to add class. Error: $error');
+    }
   }
+
+  // Function to delete a class document
+  Future<void> _deleteClass(String docId) async {
+  try {
+    print('Attempting to delete document with ID: $docId'); // Debug message
+    await FirebaseFirestore.instance.collection('Class').doc(docId).delete();
+    print('Document deleted successfully'); // Debug message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Class deleted successfully')),
+    );
+  } catch (error) {
+    print('Failed to delete class: $error'); // Debug message
+    _showErrorDialog('Failed to delete class. Error: $error');
+  }
+}
+
 
   // Show error dialog
   void _showErrorDialog(String message) {
@@ -65,7 +107,6 @@ class _AddClassScreenState extends State<AddClassScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Dropdown for class selection
             DropdownButtonFormField<String>(
@@ -110,6 +151,33 @@ class _AddClassScreenState extends State<AddClassScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF134B70),
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 50.0),
+              ),
+            ),
+            SizedBox(height: 32.0),
+
+            // List of existing classes with delete option
+            Expanded(
+              child: StreamBuilder(
+                stream: FirebaseFirestore.instance.collection('Class').snapshots(),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  final classDocs = snapshot.data!.docs;
+                  return ListView.builder(
+                    itemCount: classDocs.length,
+                    itemBuilder: (context, index) {
+                      var doc = classDocs[index];
+                      return ListTile(
+                        title: Text(doc['Class']),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _deleteClass(doc.id),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],

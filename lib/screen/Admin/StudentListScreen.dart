@@ -4,6 +4,10 @@ import 'package:school_bridge_app/screen/Admin/AddTeacher.dart';
 import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
 
 class StudentListScreen extends StatefulWidget {
+  final String className;
+
+  StudentListScreen({required this.className});
+
   @override
   _StudentListScreenState createState() => _StudentListScreenState();
 }
@@ -11,7 +15,7 @@ class StudentListScreen extends StatefulWidget {
 class _StudentListScreenState extends State<StudentListScreen> {
   // Function to delete a teacher after confirmation
   void _deleteTeacher(String docId) {
-    FirebaseFirestore.instance.collection('student').doc(docId).delete();
+    FirebaseFirestore.instance.collection('Student').doc(docId).delete();
   }
 
   // Function to show confirmation dialog
@@ -47,7 +51,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF134B70),
-        title: Text('STUDENTS'),
+        title: Text('STUDENTS - ${widget.className}'), // Display the class name
         leading: GestureDetector(
           onTap: () {
             Navigator.of(context).pop(); // Go back when back icon is pressed
@@ -110,21 +114,24 @@ class _StudentListScreenState extends State<StudentListScreen> {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('Student').snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('Student')
+            .where('Class', isEqualTo: widget.className) // Filter by class name
+            .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return Center(child: CircularProgressIndicator());
           }
 
-          final teacherDocs = snapshot.data!.docs;
+          final studentDocs = snapshot.data!.docs;
 
           return ListView.builder(
             padding: EdgeInsets.all(16.0),
-            itemCount: teacherDocs.length,
+            itemCount: studentDocs.length,
             itemBuilder: (context, index) {
-              final teacherData =
-                  teacherDocs[index].data() as Map<String, dynamic>;
-              final docId = teacherDocs[index].id; // Get document ID
+              final studentData =
+                  studentDocs[index].data() as Map<String, dynamic>;
+              final docId = studentDocs[index].id; // Get document ID
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -143,7 +150,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "NAME: ${teacherData['Name']}",
+                          "NAME: ${studentData['Name']}",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -151,7 +158,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          "CLASS: ${teacherData['Class']}", // Joining the subjects array
+                          "Roll No: ${studentData['Roll']}",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -165,7 +172,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
                             IconButton(
                               icon: Icon(Icons.edit, color: Colors.blue),
                               onPressed: () {
-                                // Navigate to EditTeacher screen
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -176,7 +182,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
                             IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
                               onPressed: () {
-                                // Show confirmation dialog before deleting
                                 _showDeleteConfirmationDialog(context, docId);
                               },
                             ),
@@ -193,7 +198,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Handle add teacher action
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddTeacher()),
