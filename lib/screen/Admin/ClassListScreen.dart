@@ -1,45 +1,99 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:school_bridge_app/screen/Admin/AddClassScreen.dart';
-import 'package:school_bridge_app/screen/Admin/AddTeacher.dart';
-import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-class ClassListScreen extends StatefulWidget {
+class AddClassScreen extends StatefulWidget {
   @override
-  _ClassListScreenState createState() => _ClassListScreenState();
+  _AddClassScreenState createState() => _AddClassScreenState();
 }
 
-class _ClassListScreenState extends State<ClassListScreen> {
-  // Function to delete a teacher after confirmation
-  void _deleteTeacher(String docId) {
-    FirebaseFirestore.instance.collection('class').doc(docId).delete();
+class _AddClassScreenState extends State<AddClassScreen> {
+  String? _selectedClass;
+  String? _selectedSection;
+
+  // List of class options
+  final List<String> classOptions = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+  // List of section options
+  final List<String> sectionOptions = ['A', 'B', 'C'];
+
+  // Function to add class and section to Firestore with incremented ID
+  Future<void> _addClassToFirestore() async {
+    if (_selectedClass == null || _selectedSection == null) {
+      _showErrorDialog('Please select both class and section.');
+      return;
+    }
+
+    try {
+      // Fetch the latest document in the Class collection by ID
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('Class')
+          .orderBy('ID', descending: true)
+          .limit(1)
+          .get();
+
+      int nextID;
+      if (querySnapshot.docs.isEmpty) {
+        // If no documents, start ID from 1
+        nextID = 1;
+      } else {
+        var latestID = querySnapshot.docs.first['ID'];
+        if (latestID is int) {
+          nextID = latestID + 1;
+        } else if (latestID is String) {
+          nextID = int.tryParse(latestID) ?? 1;
+        } else {
+          throw Exception('Unexpected ID type in Firestore.');
+        }
+      }
+
+      // Combine class and section
+      String classField = _selectedClass! + _selectedSection!;
+
+      // Add the class with incremented ID
+      await FirebaseFirestore.instance.collection('Class').add({
+        'Class': classField,
+        'ID': nextID,
+      });
+
+      Navigator.of(context).pop(); // Close the screen after adding
+    } catch (error) {
+      _showErrorDialog('Failed to add class. Error: $error');
+    }
   }
 
-  // Function to show confirmation dialog
-  void _showDeleteConfirmationDialog(BuildContext context, String docId) {
+  // Function to delete a class document
+  Future<void> _deleteClass(String docId) async {
+  try {
+    print('Attempting to delete document with ID: $docId'); // Debug message
+    await FirebaseFirestore.instance.collection('Class').doc(docId).delete();
+    print('Document deleted successfully'); // Debug message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Class deleted successfully')),
+    );
+  } catch (error) {
+    print('Failed to delete class: $error'); // Debug message
+    _showErrorDialog('Failed to delete class. Error: $error');
+  }
+}
+
+
+  // Show error dialog
+  void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Delete Class'),
-          content: Text('Are you sure you want to delete this class?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                _deleteTeacher(docId); // Call delete function
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+      builder: (ctx) => AlertDialog(
+        title: Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: Text('Okay'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -48,151 +102,87 @@ class _ClassListScreenState extends State<ClassListScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF134B70),
-        title: Text('CLASS'),
-        leading: GestureDetector(
-          onTap: () {
-            Navigator.of(context).pop(); // Go back when back icon is pressed
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.asset(
-              'assets/back.png', // Ensure this image is added in your project under the assets folder
-              fit: BoxFit.contain,
+        title: Text('Add Class'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Dropdown for class selection
+            DropdownButtonFormField<String>(
+              value: _selectedClass,
+              decoration: InputDecoration(labelText: 'Select Class'),
+              items: classOptions.map((String classNumber) {
+                return DropdownMenuItem<String>(
+                  value: classNumber,
+                  child: Text(classNumber),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedClass = newValue;
+                });
+              },
             ),
-          ),
-        ),
-        actions: [
-          Builder(
-            builder: (context) {
-              return IconButton(
-                icon: Icon(Icons.menu),
-                onPressed: () {
-                  Scaffold.of(context)
-                      .openEndDrawer(); // Open end drawer when menu icon is pressed
-                },
-              );
-            },
-          ),
-        ],
-      ),
-      endDrawer: Container(
-        width: MediaQuery.of(context).size.width * 0.6,
-        child: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              Container(
-                height: 100,
-                child: DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Color(0xFF134B70),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                      ),
-                    ),
-                  ),
-                ),
+            SizedBox(height: 16.0),
+
+            // Dropdown for section selection
+            DropdownButtonFormField<String>(
+              value: _selectedSection,
+              decoration: InputDecoration(labelText: 'Select Section'),
+              items: sectionOptions.map((String section) {
+                return DropdownMenuItem<String>(
+                  value: section,
+                  child: Text(section),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedSection = newValue;
+                });
+              },
+            ),
+            SizedBox(height: 32.0),
+
+            // Add Class button
+            ElevatedButton(
+              onPressed: _addClassToFirestore,
+              child: Text('Add Class'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF134B70),
+                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 50.0),
               ),
-              buildDrawerItem(context, 'assets/students.png', 'Student'),
-              buildDrawerItem(context, 'assets/timetable.png', 'Schedule'),
-              buildDrawerItem(context, 'assets/calendar.png', 'Event'),
-              buildDrawerItem(context, 'assets/leave.png', 'Leave'),
-              buildDrawerItem(context, 'assets/exam-time.png', 'Result'),
-              buildDrawerItem(context, 'assets/chat.png', 'Feedback'),
-              buildDrawerItem(
-                  context, 'assets/loudspeaker.png', 'Announcement'),
-            ],
-          ),
+            ),
+            SizedBox(height: 32.0),
+
+            // List of existing classes with delete option
+            Expanded(
+              child: StreamBuilder(
+                stream: FirebaseFirestore.instance.collection('Class').snapshots(),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  final classDocs = snapshot.data!.docs;
+                  return ListView.builder(
+                    itemCount: classDocs.length,
+                    itemBuilder: (context, index) {
+                      var doc = classDocs[index];
+                      return ListTile(
+                        title: Text(doc['Class']),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _deleteClass(doc.id),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('Class').snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          final teacherDocs = snapshot.data!.docs;
-
-          return ListView.builder(
-            padding: EdgeInsets.all(16.0),
-            itemCount: teacherDocs.length,
-            itemBuilder: (context, index) {
-              final teacherData =
-                  teacherDocs[index].data() as Map<String, dynamic>;
-              final docId = teacherDocs[index].id; // Get document ID
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    side: BorderSide(
-                      color: Colors.blue.shade200,
-                      width: 1,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              "Class: ${teacherData['Class']}",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 25,
-                              ),
-                            ),
-                            Text("                                     "),
-                             IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                // Show confirmation dialog before deleting
-                                _showDeleteConfirmationDialog(context, docId);
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-  onPressed: () {
-    // Navigate to AddClassScreen when add button is pressed
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => AddClassScreen()),
-    );
-  },
-  child: Icon(Icons.add),
-  backgroundColor: Color(0xFF134B70),
-),
-
-    );
-  }
-
-  ListTile buildDrawerItem(BuildContext context, String asset, String title) {
-    return ListTile(
-      leading: Image.asset(asset, width: 30, height: 30),
-      title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-      onTap: () {
-        Navigator.of(context).pop();
-      },
     );
   }
 }
