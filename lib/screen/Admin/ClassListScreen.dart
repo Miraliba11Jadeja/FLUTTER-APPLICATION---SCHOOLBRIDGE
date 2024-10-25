@@ -1,14 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:school_bridge_app/screen/Admin/AddClassScreen.dart';
-import 'package:school_bridge_app/screen/Admin/StudentListScreen.dart';
+import 'package:school_bridge_app/screen/Admin/AddTeacher.dart';
+import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
 
-class ClassListScreen extends StatefulWidget {
+class AddClassScreen extends StatefulWidget {
   @override
-  _ClassListScreenState createState() => _ClassListScreenState();
+  _AddClassScreenState createState() => _AddClassScreenState();
 }
 
 class _ClassListScreenState extends State<ClassListScreen> {
+  // Function to delete a teacher after confirmation
+  void _deleteTeacher(String docId) {
+    FirebaseFirestore.instance.collection('class').doc(docId).delete();
+  }
+
+  // Function to show confirmation dialog
+  void _showDeleteConfirmationDialog(BuildContext context, String docId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Class'),
+          content: Text('Are you sure you want to delete this class?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteTeacher(docId); // Call delete function
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,12 +51,12 @@ class _ClassListScreenState extends State<ClassListScreen> {
         title: Text('CLASS'),
         leading: GestureDetector(
           onTap: () {
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(); // Go back when back icon is pressed
           },
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Image.asset(
-              'assets/back.png',
+              'assets/back.png', // Ensure this image is added in your project under the assets folder
               fit: BoxFit.contain,
             ),
           ),
@@ -33,65 +67,104 @@ class _ClassListScreenState extends State<ClassListScreen> {
               return IconButton(
                 icon: Icon(Icons.menu),
                 onPressed: () {
-                  Scaffold.of(context).openEndDrawer();
+                  Scaffold.of(context)
+                      .openEndDrawer(); // Open end drawer when menu icon is pressed
                 },
               );
             },
           ),
         ],
       ),
-      endDrawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color(0xFF134B70),
+      endDrawer: Container(
+        width: MediaQuery.of(context).size.width * 0.6,
+        child: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              Container(
+                height: 100,
+                child: DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF134B70),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              child: Text(
-                'Options',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-            buildDrawerItem(context, 'assets/icon.png', 'Item 1'),
-            buildDrawerItem(context, 'assets/icon.png', 'Item 2'),
-          ],
+              buildDrawerItem(context, 'assets/students.png', 'Student'),
+              buildDrawerItem(context, 'assets/timetable.png', 'Schedule'),
+              buildDrawerItem(context, 'assets/calendar.png', 'Event'),
+              buildDrawerItem(context, 'assets/leave.png', 'Leave'),
+              buildDrawerItem(context, 'assets/exam-time.png', 'Result'),
+              buildDrawerItem(context, 'assets/chat.png', 'Feedback'),
+              buildDrawerItem(
+                  context, 'assets/loudspeaker.png', 'Announcement'),
+            ],
+          ),
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('Class').snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
           if (!snapshot.hasData) {
             return Center(child: CircularProgressIndicator());
           }
 
-          final classDocs = snapshot.data!.docs;
+          final teacherDocs = snapshot.data!.docs;
 
           return ListView.builder(
             padding: EdgeInsets.all(16.0),
-            itemCount: classDocs.length,
+            itemCount: teacherDocs.length,
             itemBuilder: (context, index) {
-              final classData = classDocs[index].data() as Map<String, dynamic>;
-              final className = classData['Class'] ?? 'Unnamed Class';
+              final teacherData =
+                  teacherDocs[index].data() as Map<String, dynamic>;
+              final docId = teacherDocs[index].id; // Get document ID
 
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => StudentListScreen(
-                        className: classData['Class'], // Pass the selected class name
-                      ),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    side: BorderSide(
+                      color: Colors.blue.shade200,
+                      width: 1,
                     ),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0),
-                  child: ClassCard(className: className),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              "Class: ${teacherData['Class']}",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 25,
+                              ),
+                            ),
+                            Text("                                     "),
+                             IconButton(
+                              icon: Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                // Show confirmation dialog before deleting
+                                _showDeleteConfirmationDialog(context, docId);
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },
@@ -99,16 +172,17 @@ class _ClassListScreenState extends State<ClassListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddClassScreen()),
-          );
-        },
-        child: Icon(Icons.add),
-        backgroundColor: Color(0xFF134B70),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+  onPressed: () {
+    // Navigate to AddClassScreen when add button is pressed
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AddClassScreen()),
+    );
+  },
+  child: Icon(Icons.add),
+  backgroundColor: Color(0xFF134B70),
+),
+
     );
   }
 
@@ -119,45 +193,6 @@ class _ClassListScreenState extends State<ClassListScreen> {
       onTap: () {
         Navigator.of(context).pop();
       },
-    );
-  }
-}
-
-class ClassCard extends StatelessWidget {
-  final String className;
-
-  ClassCard({required this.className});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-        side: BorderSide(
-          color: Colors.blue.shade200,
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  "Class: $className",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 25,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
