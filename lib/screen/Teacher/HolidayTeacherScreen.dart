@@ -1,18 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For formatting the selected date
-
-void main() {
-  runApp(HolidayApp());
-}
-
-class HolidayApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: HolidayTeacherScreen(),
-    );
-  }
-}
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class HolidayTeacherScreen extends StatefulWidget {
   @override
@@ -20,47 +8,29 @@ class HolidayTeacherScreen extends StatefulWidget {
 }
 
 class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
-  List<Map<String, String>> holidays = [
-    {'name': 'MAKAR SANKRANTI', 'date': '14 Jan, 2024'},
-    {'name': 'REPUBLIC DAY', 'date': '26 Jan, 2024'},
-    {'name': 'RAMZAN-ID', 'date': '10 Apr, 2024'},
-  ];
-
-  TextEditingController nameController = TextEditingController();
+  List<Map<String, dynamic>> holidays = [];
+  final TextEditingController nameController = TextEditingController();
   DateTime? selectedDate;
   String formattedDate = '';
-
-  // Declare a GlobalKey for the Scaffold
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  void _showDeleteDialog(int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Delete Holiday'),
-          content: Text('Do you want to delete this holiday?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context)
-                    .pop(); // Close the dialog and keep the holiday
-              },
-              child: Text('Keep'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  holidays.removeAt(index); // Delete the holiday from the list
-                });
-                Navigator.of(context).pop(); // Close the dialog after deletion
-              },
-              child: Text('Delete'),
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    fetchHolidays();
+  }
+
+  void fetchHolidays() async {
+    FirebaseFirestore.instance.collection('Holiday').snapshots().listen((snapshot) {
+      final data = snapshot.docs.map((doc) => {
+        'id': doc.id,
+        'name': doc['Name'],
+        'date': doc['Date'],
+      }).toList();
+      setState(() {
+        holidays = data;
+      });
+    });
   }
 
   void _showAddHolidayDialog() {
@@ -82,8 +52,9 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
                 child: AbsorbPointer(
                   child: TextField(
                     decoration: InputDecoration(
-                      labelText:
-                          formattedDate.isEmpty ? 'Select Date' : formattedDate,
+                      labelText: formattedDate.isEmpty
+                          ? 'Select Date'
+                          : formattedDate,
                     ),
                   ),
                 ),
@@ -93,31 +64,35 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog without adding
+                Navigator.of(context).pop();
               },
               child: Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
-                if (nameController.text.isNotEmpty &&
-                    formattedDate.isNotEmpty) {
-                  setState(() {
-                    holidays.add({
-                      'name': nameController.text,
-                      'date': formattedDate,
-                    });
-                  });
-                  nameController.clear();
-                  formattedDate = '';
-                  Navigator.of(context).pop(); // Close the dialog after adding
-                }
-              },
+              onPressed: _addHolidayToFirestore,
               child: Text('Add'),
             ),
           ],
         );
       },
     );
+  }
+
+  Future<void> _addHolidayToFirestore() async {
+    if (nameController.text.isNotEmpty && formattedDate.isNotEmpty) {
+      final newHoliday = {
+        'Name': nameController.text,
+        'Date': formattedDate,
+      };
+      await FirebaseFirestore.instance.collection('Holiday').add(newHoliday);
+      nameController.clear();
+      formattedDate = '';
+      Navigator.of(context).pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill out all fields')),
+      );
+    }
   }
 
   Future<void> _selectDate() async {
@@ -135,10 +110,40 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
     }
   }
 
+  void _showDeleteDialog(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Holiday'),
+          content: Text('Do you want to delete this holiday?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Keep'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await FirebaseFirestore.instance
+                    .collection('Holiday')
+                    .doc(holidays[index]['id'])
+                    .delete();
+                Navigator.of(context).pop();
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey, // Assign the GlobalKey to the Scaffold
+      key: _scaffoldKey,
       appBar: AppBar(
         backgroundColor: Color(0xFF134B70),
         title: Text('HOLIDAY'),
@@ -152,7 +157,6 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
           IconButton(
             icon: Icon(Icons.menu),
             onPressed: () {
-              // Use the GlobalKey to open the end drawer
               _scaffoldKey.currentState?.openEndDrawer();
             },
           ),
@@ -186,8 +190,7 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
               buildDrawerItem(context, 'assets/timetable.png', 'Schedule'),
               buildDrawerItem(context, 'assets/chat.png', 'Feedback'),
               buildDrawerItem(context, 'assets/calendar.png', 'Event'),
-              buildDrawerItem(
-                  context, 'assets/loudspeaker.png', 'Announcement'),
+              buildDrawerItem(context, 'assets/loudspeaker.png', 'Announcement'),
               buildDrawerItem(context, 'assets/holidays.png', 'Holiday'),
               buildDrawerItem(context, 'assets/score.png', 'Marks'),
             ],
@@ -196,23 +199,25 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: holidays.length,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {
-                _showDeleteDialog(index); // Show dialog when tapped
-              },
-              child: HolidayCard(
-                holidayName: holidays[index]['name']!,
-                holidayDate: holidays[index]['date']!,
+        child: holidays.isEmpty
+            ? Center(child: Text("No holidays found"))
+            : ListView.builder(
+                itemCount: holidays.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                      _showDeleteDialog(index);
+                    },
+                    child: HolidayCard(
+                      holidayName: holidays[index]['name'],
+                      holidayDate: holidays[index]['date'],
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddHolidayDialog, // Show the add holiday dialog
+        onPressed: _showAddHolidayDialog,
         backgroundColor: Color(0xFF134B70),
         child: Icon(Icons.add, size: 40),
       ),
@@ -246,7 +251,7 @@ class HolidayCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: Colors.blue, // Border color
+          color: Colors.blue,
           width: 2,
         ),
       ),
