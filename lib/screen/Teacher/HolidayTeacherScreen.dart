@@ -20,18 +20,36 @@ class _HolidayTeacherScreenState extends State<HolidayTeacherScreen> {
     fetchHolidays();
   }
 
-  void fetchHolidays() async {
+ void fetchHolidays() async {
+  try {
     FirebaseFirestore.instance.collection('Holiday').snapshots().listen((snapshot) {
-      final data = snapshot.docs.map((doc) => {
-        'id': doc.id,
-        'name': doc['Name'],
-        'date': doc['Date'],
-      }).toList();
+      final data = snapshot.docs.map((doc) {
+        // Ensure both fields are extracted safely
+        String? name = doc.data().containsKey('Name') ? doc['Name'] : null;
+        String? date = doc.data().containsKey('Date') ? doc['Date'] : null;
+
+        // Only add documents with valid data
+        if (name != null && date != null) {
+          return {'id': doc.id, 'name': name, 'date': date};
+        }
+        return null;
+      }).where((doc) => doc != null).toList();
+
       setState(() {
-        holidays = data;
+        holidays = data.cast<Map<String, dynamic>>();
       });
+
+      if (holidays.isEmpty) {
+        print('No holidays found in Firestore.');
+      }
     });
+  } catch (e) {
+    print('Error fetching holidays: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error fetching holiday data')),
+    );
   }
+}
 
   void _showAddHolidayDialog() {
     showDialog(
