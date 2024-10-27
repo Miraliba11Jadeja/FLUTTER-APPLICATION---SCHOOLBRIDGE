@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:school_bridge_app/screen/Admin/ClassListScreen.dart';
 
 class StudentDashboardScreen extends StatelessWidget {
   @override
@@ -32,10 +31,10 @@ class StudentDashboardScreen extends StatelessWidget {
               imagePath: 'assets/students.png', // Path to your image
               label: "STUDENTS",
               onTap: () {
-               Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => ClassListScreen()),
-                          );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ClassListScreen()),
+                );
               },
             ),
             _buildDashboardItem(
@@ -104,7 +103,7 @@ class StudentDashboardScreen extends StatelessWidget {
             ),
             child: Image.asset(
               imagePath,
-              width: 45,  // Set the size of the image
+              width: 45, // Set the size of the image
               height: 45, // Set the size of the image
               fit: BoxFit.contain,
             ),
