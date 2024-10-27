@@ -49,6 +49,7 @@ class _ManageMarksScreenState extends State<ManageMarksScreen> {
       fields.add(
         Column(
           children: [
+            
             TextFormField(
               controller: _distributionNameControllers[i],
               decoration: InputDecoration(

@@ -50,7 +50,7 @@ class StudentDashboardScreen extends StatelessWidget {
           children: [
             _buildDashboardItem(
               context,
-              'assets/Profile.png', // Profile asset
+              'assets/Sp.png', // Profile asset
               'PROFILE',
             ),
             _buildDashboardItem(
@@ -75,7 +75,7 @@ class StudentDashboardScreen extends StatelessWidget {
             ),
             _buildDashboardItem(
               context,
-              'assets/event.png', // Event asset
+              'assets/calendar.png', // Event asset
               'EVENT',
             ),
             _buildDashboardItem(
@@ -90,7 +90,7 @@ class StudentDashboardScreen extends StatelessWidget {
             ),
             _buildDashboardItem(
               context,
-              'assets/good-score.png', // Results asset
+              'assets/exam-time.png', // Results asset
               'RESULT',
             ),
           ],
