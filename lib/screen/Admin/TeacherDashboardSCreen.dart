@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:school_bridge_app/screen/Admin/SubjectScreen.dart';
 import 'package:school_bridge_app/screen/Admin/TeacherListScreen.dart';
+import 'package:school_bridge_app/screen/Admin/TeacherScheduleListScreen.dart';
 
 class TeacherDashboardScreen extends StatelessWidget {
   @override
@@ -66,7 +67,12 @@ class TeacherDashboardScreen extends StatelessWidget {
               imagePath: 'assets/timetable.png', // Path to your "Schedule" image
               label: "SCHEDULE",
               onTap: () {
-                // Navigate to Schedule Section
+               Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TeacherScheduleListScreen(),
+                  ),
+                );
               },
             ),
             _buildDashboardItem(
