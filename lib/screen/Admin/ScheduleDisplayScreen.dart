@@ -91,7 +91,7 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
                                     color: Colors.orange, size: 24)
                               else
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: Colors.blue),
+                                  icon: Icon(Icons.edit, color: Color(0xFF134B70)),
                                   onPressed: () {
                                     _editSchedule(
                                         context, filteredScheduleDocs[index]);
@@ -141,7 +141,7 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
         padding: EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: ["MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) {
+          children: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) {
             return GestureDetector(
               onTap: () {
                 _filterScheduleByDay(
@@ -150,7 +150,7 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 decoration: BoxDecoration(
-                  color: selectedDay == day ? Colors.blue : Colors.transparent,
+                  color: selectedDay == day ? Color(0xFF134B70) : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(

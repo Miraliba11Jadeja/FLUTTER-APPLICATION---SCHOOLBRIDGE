@@ -26,7 +26,7 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
   Map<String, Map<String, String?>> selectedClass = {};
   Map<String, Map<String, String?>> selectedSubject = {};
   List<String> days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  String selectedDay = "Monday";
+  int currentDayIndex = 0;
 
   @override
   void initState() {
@@ -36,7 +36,6 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
   }
 
   Future<void> _fetchClasses() async {
-    // Fetch classes from the class schedule collection
     final classSnapshot = await FirebaseFirestore.instance.collection('Class').get();
     setState(() {
       classes = classSnapshot.docs.map((doc) => doc['Class'] as String).toList();
@@ -44,7 +43,6 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
   }
 
   Future<void> _fetchSubjects() async {
-    // Fetch subjects based on the teacher's name
     final subjectSnapshot = await FirebaseFirestore.instance
         .collection('Teacher')
         .where('Name', isEqualTo: widget.teacherName)
@@ -57,9 +55,10 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
     });
   }
 
-  Future<void> _addSchedule() async {
+  Future<void> _saveScheduleForDay() async {
     if (_formKey.currentState!.validate()) {
       try {
+        final selectedDay = days[currentDayIndex];
         for (int i = 0; i < periods.length; i++) {
           final period = periods[i];
           await FirebaseFirestore.instance.collection('Schedule').add({
@@ -72,14 +71,27 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
             'day': selectedDay,
           });
         }
-
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$selectedDay schedule added successfully')),
+          SnackBar(content: Text('$selectedDay schedule saved')),
         );
+
+        if (currentDayIndex < days.length - 1) {
+          // Move to the next day and reset the form
+          setState(() {
+            currentDayIndex++;
+            selectedClass.clear();
+            selectedSubject.clear();
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('All schedules added successfully')),
+          );
+        }
       } catch (e) {
-        print("Error adding schedule: $e");
+        print("Error saving schedule: $e");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add schedule: $e')),
+          SnackBar(content: Text('Failed to save schedule: $e')),
         );
       }
     }
@@ -87,9 +99,11 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final selectedDay = days[currentDayIndex];
     return Scaffold(
       appBar: AppBar(
         title: Text("Add Schedule for $selectedDay"),
+        backgroundColor: Color(0xFF134B70),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -97,21 +111,6 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
           key: _formKey,
           child: Column(
             children: [
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Select Day'),
-                value: selectedDay,
-                items: days.map((day) {
-                  return DropdownMenuItem(
-                    value: day,
-                    child: Text(day),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedDay = value!;
-                  });
-                },
-              ),
               Expanded(
                 child: ListView.builder(
                   itemCount: periods.length,
@@ -168,9 +167,10 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addSchedule,
-        child: Icon(Icons.save),
-        tooltip: 'Save Schedule',
+        onPressed: _saveScheduleForDay,
+        child: Icon(currentDayIndex < days.length - 1 ? Icons.arrow_forward : Icons.check),
+        tooltip: currentDayIndex < days.length - 1 ? 'Next Day' : 'Submit Schedule',
+        backgroundColor: Color(0xFF134B70),
       ),
     );
   }
