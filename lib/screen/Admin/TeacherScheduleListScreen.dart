@@ -99,11 +99,14 @@ class _TeacherScheduleListScreenState extends State<TeacherScheduleListScreen> {
         );
       }
     } else {
-      // Display the schedule
+      // Display the schedule and pass teacher name
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ScheduleDisplayScreen(scheduleDocs: scheduleSnapshot.docs),
+          builder: (context) => ScheduleDisplayScreen(
+            scheduleDocs: scheduleSnapshot.docs,
+            teacherName: teacherName,
+          ),
         ),
       );
     }
@@ -129,7 +132,7 @@ class ClassCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Text(
-          " $className",
+          className,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 25,
