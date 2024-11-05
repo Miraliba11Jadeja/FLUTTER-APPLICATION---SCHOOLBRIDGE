@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/Admin/HolidayAdminScreen.dart';
 import 'package:school_bridge_app/screen/Admin/SubjectScreen.dart';
 import 'package:school_bridge_app/screen/Admin/TeacherListScreen.dart';
 import 'package:school_bridge_app/screen/Admin/TeacherScheduleListScreen.dart';
@@ -47,7 +48,12 @@ class TeacherDashboardScreen extends StatelessWidget {
               imagePath: 'assets/holidays.png', // Path to your "Holidays" image
               label: "HOLIDAYS",
               onTap: () {
-                // Navigate to Holidays Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HolidayAdminScreen(),
+                  ),
+                );
               },
             ),
             _buildDashboardItem(
