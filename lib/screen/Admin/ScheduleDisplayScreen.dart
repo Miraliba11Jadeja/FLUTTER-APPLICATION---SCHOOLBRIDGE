@@ -5,7 +5,8 @@ class ScheduleDisplayScreen extends StatefulWidget {
   final List<QueryDocumentSnapshot> scheduleDocs;
   final String teacherName; // Add this to pass the teacher's name
 
-  ScheduleDisplayScreen({required this.scheduleDocs, required this.teacherName});
+  ScheduleDisplayScreen(
+      {required this.scheduleDocs, required this.teacherName});
 
   @override
   _ScheduleDisplayScreenState createState() => _ScheduleDisplayScreenState();
@@ -16,17 +17,24 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
   List<QueryDocumentSnapshot> filteredScheduleDocs = [];
 
   @override
-  void initState() {
-    super.initState();
-    _filterScheduleByDay(selectedDay);
-  }
-
   void _filterScheduleByDay(String day) {
     setState(() {
       filteredScheduleDocs = widget.scheduleDocs.where((doc) {
         final scheduleData = doc.data() as Map<String, dynamic>;
-        return scheduleData['day'] == day; // Assuming 'day' is a field in Firestore
+        return scheduleData['day'] == day;
       }).toList();
+
+      // Sort filtered schedule documents by period order
+      filteredScheduleDocs.sort((a, b) {
+        final periodA =
+            int.tryParse((a.data() as Map<String, dynamic>)['period'] ?? '0') ??
+                0;
+        final periodB =
+            int.tryParse((b.data() as Map<String, dynamic>)['period'] ?? '0') ??
+                0;
+        return periodA.compareTo(periodB);
+      });
+
       selectedDay = day;
     });
   }
@@ -35,7 +43,8 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.teacherName}'s Schedule"), // Use teacher's name in title
+        title: Text(
+            "${widget.teacherName}'s Schedule"), // Use teacher's name in title
         backgroundColor: Color(0xFF134B70),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -59,7 +68,8 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
               child: ListView.builder(
                 itemCount: filteredScheduleDocs.length,
                 itemBuilder: (context, index) {
-                  final scheduleData = filteredScheduleDocs[index].data() as Map<String, dynamic>;
+                  final scheduleData = filteredScheduleDocs[index].data()
+                      as Map<String, dynamic>;
                   final isLunchBreak = scheduleData['period'] == "Lunch Break";
 
                   return Card(
@@ -77,16 +87,22 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                isLunchBreak ? "Lunch Break" : "CLASS - ${scheduleData['class']}",
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                isLunchBreak
+                                    ? "Lunch Break"
+                                    : "CLASS - ${scheduleData['class']}",
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                               if (isLunchBreak)
-                                Icon(Icons.restaurant, color: Colors.orange, size: 24)
+                                Icon(Icons.restaurant,
+                                    color: Colors.orange, size: 24)
                               else
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: Color(0xFF134B70)),
+                                  icon: Icon(Icons.edit,
+                                      color: Color(0xFF134B70)),
                                   onPressed: () {
-                                    _editSchedule(context, filteredScheduleDocs[index]);
+                                    _editSchedule(
+                                        context, filteredScheduleDocs[index]);
                                   },
                                 ),
                             ],
@@ -107,7 +123,9 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
                                 ),
                                 Text(
                                   scheduleData['period'] ?? 'Period',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
@@ -131,7 +149,14 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
         padding: EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) {
+          children: [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+          ].map((day) {
             return GestureDetector(
               onTap: () {
                 _filterScheduleByDay(day);
@@ -139,14 +164,18 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 decoration: BoxDecoration(
-                  color: selectedDay == day ? Color(0xFF134B70) : Colors.transparent,
+                  color: selectedDay == day
+                      ? Color(0xFF134B70)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   day,
                   style: TextStyle(
                     color: selectedDay == day ? Colors.white : Colors.black,
-                    fontWeight: selectedDay == day ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: selectedDay == day
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               ),
@@ -175,11 +204,16 @@ class EditScheduleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheduleData = scheduleDoc.data() as Map<String, dynamic>;
-    final TextEditingController classController = TextEditingController(text: scheduleData['class']);
-    final TextEditingController subjectController = TextEditingController(text: scheduleData['subject']);
-    final TextEditingController periodController = TextEditingController(text: scheduleData['period']);
-    final TextEditingController startTimeController = TextEditingController(text: scheduleData['startTime']);
-    final TextEditingController endTimeController = TextEditingController(text: scheduleData['endTime']);
+    final TextEditingController classController =
+        TextEditingController(text: scheduleData['class']);
+    final TextEditingController subjectController =
+        TextEditingController(text: scheduleData['subject']);
+    final TextEditingController periodController =
+        TextEditingController(text: scheduleData['period']);
+    final TextEditingController startTimeController =
+        TextEditingController(text: scheduleData['startTime']);
+    final TextEditingController endTimeController =
+        TextEditingController(text: scheduleData['endTime']);
 
     return Scaffold(
       appBar: AppBar(
@@ -200,7 +234,7 @@ class EditScheduleScreen extends StatelessWidget {
             ),
             TextField(
               controller: periodController,
-              decoration: InputDecoration(labelText: 'Period'),
+              decoration: InputDecoration(labelText: ''),
             ),
             TextField(
               controller: startTimeController,
@@ -248,11 +282,13 @@ class EditScheduleScreen extends StatelessWidget {
         'startTime': startTime,
         'endTime': endTime,
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Schedule updated successfully")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Schedule updated successfully")));
       Navigator.of(context).pop();
     } catch (e) {
       print("Failed to update schedule: $e");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to update schedule")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Failed to update schedule")));
     }
   }
 }
