@@ -66,75 +66,72 @@ class _ScheduleDisplayScreenState extends State<ScheduleDisplayScreen> {
             _buildDayTabs(),
             Expanded(
               child: ListView.builder(
-                itemCount: filteredScheduleDocs.length,
-                itemBuilder: (context, index) {
-                  final scheduleData = filteredScheduleDocs[index].data()
-                      as Map<String, dynamic>;
-                  final isLunchBreak = scheduleData['period'] == "Lunch Break";
+  itemCount: filteredScheduleDocs.length,
+  itemBuilder: (context, index) {
+    final scheduleData = filteredScheduleDocs[index].data() as Map<String, dynamic>;
+    final isLunchBreak = scheduleData['period'] == "Lunch Break";
+    final isFreePeriod = scheduleData['subject'] == "Free"; // Check if the class is marked as Free
 
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 8.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: BorderSide(color: Colors.blue.shade200, width: 1),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                isLunchBreak
-                                    ? "Lunch Break"
-                                    : "CLASS - ${scheduleData['class']}",
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              if (isLunchBreak)
-                                Icon(Icons.restaurant,
-                                    color: Colors.orange, size: 24)
-                              else
-                                IconButton(
-                                  icon: Icon(Icons.edit,
-                                      color: Color(0xFF134B70)),
-                                  onPressed: () {
-                                    _editSchedule(
-                                        context, filteredScheduleDocs[index]);
-                                  },
-                                ),
-                            ],
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            "${scheduleData['startTime']} - ${scheduleData['endTime']}",
-                            style: TextStyle(color: Colors.grey[700]),
-                          ),
-                          SizedBox(height: 4),
-                          if (!isLunchBreak)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  scheduleData['subject'] ?? 'No Subject',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                Text(
-                                  scheduleData['period'] ?? 'Period',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: Colors.blue.shade200, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  isLunchBreak
+                      ? "Lunch Break"
+                      : isFreePeriod
+                          ? "Free Period" // Display "Free Period" if the class is marked as Free
+                          : "CLASS - ${scheduleData['class']}",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                if (isLunchBreak)
+                  Icon(Icons.restaurant, color: Colors.orange, size: 24)
+                else
+                  IconButton(
+                    icon: Icon(Icons.edit, color: Color(0xFF134B70)),
+                    onPressed: () {
+                      _editSchedule(context, filteredScheduleDocs[index]);
+                    },
+                  ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Text(
+              "${scheduleData['startTime']} - ${scheduleData['endTime']}",
+              style: TextStyle(color: Colors.grey[700]),
+            ),
+            SizedBox(height: 4),
+            if (!isLunchBreak && !isFreePeriod)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    scheduleData['subject'] ?? 'No Subject',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  Text(
+                    scheduleData['period'] ?? 'Period',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
+          ],
+        ),
+      ),
+    );
+  },
+),
+
             ),
           ],
         ),
