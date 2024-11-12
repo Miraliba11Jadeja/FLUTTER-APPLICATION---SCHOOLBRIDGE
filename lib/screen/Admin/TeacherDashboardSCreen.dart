@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/Admin/EventScreen.dart';
 import 'package:school_bridge_app/screen/Admin/HolidayAdminScreen.dart';
 import 'package:school_bridge_app/screen/Admin/SubjectScreen.dart';
 import 'package:school_bridge_app/screen/Admin/TeacherListScreen.dart';
@@ -81,18 +82,17 @@ class TeacherDashboardScreen extends StatelessWidget {
                 );
               },
             ),
-            _buildDashboardItem(
-              imagePath: 'assets/chat.png', // Path to your "Feedback" image
-              label: "FEEDBACK",
-              onTap: () {
-                // Navigate to Feedback Section
-              },
-            ),
+           
             _buildDashboardItem(
               imagePath: 'assets/calendar.png', // Path to your "Event" image
               label: "EVENT",
               onTap: () {
-                // Navigate to Event Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EventScreen   (),
+                  ),
+                );
               },
             ),
             _buildDashboardItem(
