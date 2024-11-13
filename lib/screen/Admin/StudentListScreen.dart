@@ -25,7 +25,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Delete Teacher'),
-          content: Text('Are you sure you want to delete this teacher?'),
+          content: Text('Are You Sure You Want To Delete This Teacher?'),
           actions: [
             TextButton(
               onPressed: () {
