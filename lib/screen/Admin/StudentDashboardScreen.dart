@@ -47,7 +47,7 @@ class StudentDashboardScreen extends StatelessWidget {
             ),
             _buildDashboardItem(
               imagePath: 'assets/calendar.png', // Path to your image
-              label: "EVENT",
+              label: "EVENTS",
               onTap: () {
                 // Navigate to Subject Section
               },
