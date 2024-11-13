@@ -38,7 +38,7 @@ class _LoginPageState extends State<StudentLoginPage> {
     String password = _passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
-      _showErrorDialog('Please enter both email and password.');
+      _showErrorDialog('Please Enter Both Email And Password.');
       return;
     }
 
