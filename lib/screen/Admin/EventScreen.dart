@@ -11,7 +11,7 @@ class EventScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("EVENTS"),
+        title: Text("EVENT"),
         backgroundColor: Color(0xFF134B70),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
