@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 
 class EventScreen extends StatelessWidget {
@@ -117,8 +118,25 @@ class _AddEventScreenState extends State<AddEventScreen> {
     }
   }
 
+  Future<String> _uploadImageToFirebaseStorage(File imageFile) async {
+    try {
+      print("Uploading image to Firebase Storage...");
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      UploadTask uploadTask = FirebaseStorage.instance
+          .ref()
+          .child("event_images/$fileName")
+          .putFile(imageFile);
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadURL = await snapshot.ref.getDownloadURL();
+      print("Image uploaded. Download URL: $downloadURL");
+      return downloadURL;
+    } catch (e) {
+      print("Image upload error: $e");
+      throw Exception("Image upload failed: $e");
+    }
+  }
+
   Future<void> _submitEvent() async {
-    // Validate input fields
     if (_eventNameController.text.trim().isEmpty ||
         _locationController.text.trim().isEmpty ||
         _selectedDate == null ||
@@ -130,25 +148,24 @@ class _AddEventScreenState extends State<AddEventScreen> {
     }
 
     try {
-      // Upload image to Firebase Storage and get the URL (you'll need to implement this part)
-      // String imageUrl = await uploadImageToFirebaseStorage(_pickedImage!);
+      print("Starting event creation...");
+      String imageUrl = await _uploadImageToFirebaseStorage(_pickedImage!);
+      print("Image uploaded successfully. URL: $imageUrl");
 
-      // For now, use the local image path (this should be replaced with imageUrl from Firebase Storage)
-      String imageUrl = _pickedImage!.path;
-
-      // Add event to Firestore
       await FirebaseFirestore.instance.collection('events').add({
         'eventName': _eventNameController.text.trim(),
         'location': _locationController.text.trim(),
         'date': _selectedDate!.toIso8601String(),
-        'image': imageUrl, // Store the URL of the uploaded image
+        'image': imageUrl,
       });
+      print("Event added successfully.");
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Event added successfully')),
       );
       Navigator.of(context).pop();
     } catch (e) {
+      print("Error adding event: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add event: $e')),
       );

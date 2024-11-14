@@ -41,6 +41,7 @@ class _AddTeacherState extends State<AddTeacher> {
   List<String> classes = [];
   List<String> subjects = [];
   String? selectedClass;
+  List<String> selectedClasses = [];
   List<String> selectedSubjects = [];
 
   // Fetch classes and subjects from Firestore
@@ -76,54 +77,73 @@ class _AddTeacherState extends State<AddTeacher> {
   }
 
   // Function to handle form submission and Firebase authentication
-  Future<void> _submitForm() async {
-    try {
-      // Step 1: Create the user in Firebase Authentication
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+  // Function to handle form submission and Firebase authentication
+Future<void> _submitForm() async {
+  try {
+    // Step 1: Create the user in Firebase Authentication
+    UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
 
-      User? user = userCredential.user;
-      if (user == null) {
-        throw Exception('User creation failed. User is null.');
-      }
-
-      // Step 2: Upload the image if it is selected
-      String? imageUrl;
-      if (_image != null) {
-        imageUrl = await _uploadImage();
-      }
-
-      // Step 3: Store teacher details in Firestore
-      await _firestore.collection('Teacher').doc(user.uid).set({
-        'Name': nameController.text.trim(),
-        'Contact': contactController.text.trim(),
-        'Email': emailController.text.trim(),
-        'Gender': genderController.text.trim(),
-        'Dob': dobController.text.trim(),
-        'Aadhar': aadharController.text.trim(),
-        'PresentA': presentAController.text.trim(),
-        'PermanentA': permanentAController.text.trim(),
-        'City': cityController.text.trim(),
-        'State': stateController.text.trim(),
-        'PinCode': pinCodeController.text.trim(),
-        'Country': countryController.text.trim(),
-        'Class': selectedClass,
-        'Subjects': selectedSubjects,
-        'Username': usernameController.text.trim(),
-        'ProfilePicture': imageUrl,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Teacher added successfully!'),
-      ));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error adding teacher: $e'),
-      ));
+    User? user = userCredential.user;
+    if (user == null) {
+      throw Exception('User creation failed. User is null.');
     }
+
+    // Step 2: Upload the image if it is selected
+    String? imageUrl;
+    if (_image != null) {
+      imageUrl = await _uploadImage();
+    }
+
+    // Step 3: Store teacher details in Firestore
+    await _firestore.collection('Teacher').doc(user.uid).set({
+      'Name': nameController.text.trim(),
+      'Contact': contactController.text.trim(),
+      'Email': emailController.text.trim(),
+      'Gender': genderController.text.trim(),
+      'Dob': dobController.text.trim(),
+      'Aadhar': aadharController.text.trim(),
+      'PresentA': presentAController.text.trim(),
+      'PermanentA': permanentAController.text.trim(),
+      'City': cityController.text.trim(),
+      'State': stateController.text.trim(),
+      'PinCode': pinCodeController.text.trim(),
+      'Country': countryController.text.trim(),
+      'Class': selectedClasses,
+      'Subjects': selectedSubjects,
+      'Username': usernameController.text.trim(),
+      'ProfilePicture': imageUrl,
+    });
+
+    // Step 4: Add teacher name to the 'TName' field of each selected subject in the 'Subject' collection
+    // Add teacher name to the 'TName' field of each selected subject in the 'Subject' collection
+    for (String subject in selectedSubjects) {
+      // Query the "Subject" collection for documents where the 'Name' field matches the selected subject
+      QuerySnapshot subjectSnapshot = await _firestore
+          .collection('Subject')
+          .where('Name', isEqualTo: subject)
+          .get();
+
+      // Update the 'TName' field for each matching document
+      for (var doc in subjectSnapshot.docs) {
+        await doc.reference.update({
+          'TName': FieldValue.arrayUnion([nameController.text.trim()]),
+        });
+      }
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Teacher added successfully!'),
+    ));
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Error adding teacher: $e'),
+    ));
   }
+}
+
 
   Future<String?> _uploadImage() async {
     if (_image == null) return null;
@@ -199,11 +219,7 @@ class _AddTeacherState extends State<AddTeacher> {
               buildDetailRow('Country', countryController),
               SizedBox(height: 20),
               buildSectionTitle('ACADEMIC DETAILS'),
-              buildDropdownRow('Class', classes, selectedClass, (value) {
-                setState(() {
-                  selectedClass = value as String?;
-                });
-              }),
+              buildMultiSelectRow('Class', classes, selectedClasses),
               buildMultiSelectRow('Subjects', subjects, selectedSubjects),
               SizedBox(height: 20),
               buildSectionTitle('ACCOUNT DETAILS'),
@@ -259,7 +275,10 @@ class _AddTeacherState extends State<AddTeacher> {
                 child: Icon(Icons.person, size: 50, color: Colors.white),
               ),
               SizedBox(height: 10),
-              Text('TEACHER PANEL', style: TextStyle(color: Colors.white)),
+              Text(
+                'Admin',
+                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
         ),
@@ -267,50 +286,30 @@ class _AddTeacherState extends State<AddTeacher> {
     );
   }
 
-  Widget buildDrawerItem(BuildContext context, String assetPath, String title, {VoidCallback? onTap}) {
+  Widget buildDrawerItem(BuildContext context, String iconPath, String label, {Function()? onTap}) {
     return ListTile(
-      leading: Image.asset(assetPath, width: 24, height: 24),
-      title: Text(title),
+      leading: Image.asset(iconPath, height: 30),
+      title: Text(label, style: TextStyle(fontSize: 18)),
       onTap: onTap,
     );
   }
 
   Widget buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
     );
   }
 
   Widget buildDetailRow(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
+      child: TextField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(),
         ),
-      ),
-    );
-  }
-
-  Widget buildDropdownRow(String label, List<String> options, String? selectedValue, ValueChanged<dynamic> onChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: DropdownButtonFormField(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(),
-        ),
-        value: selectedValue,
-        items: options.map((option) {
-          return DropdownMenuItem(
-            value: option,
-            child: Text(option),
-          );
-        }).toList(),
-        onChanged: onChanged,
       ),
     );
   }

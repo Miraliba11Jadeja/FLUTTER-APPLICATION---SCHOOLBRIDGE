@@ -59,19 +59,27 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
     if (_formKey.currentState!.validate()) {
       try {
         final selectedDay = days[currentDayIndex];
+
+        // Prepare the schedule map for the current day
+        Map<String, dynamic> daySchedule = {};
         for (int i = 0; i < periods.length; i++) {
           final period = periods[i];
-          await FirebaseFirestore.instance.collection('Schedule').add({
-            'teacherName': widget.teacherName,
-            'class': selectedClass[selectedDay]?[period['label']] ?? '',
-            'subject': selectedSubject[selectedDay]?[period['label']] ?? 'Free',
+          final periodLabel = period['label']!;
+          daySchedule[periodLabel] = {
+            'class': selectedClass[selectedDay]?[periodLabel] ?? '',
+            'subject': selectedSubject[selectedDay]?[periodLabel] ?? 'Free',
             'startTime': period['time']!.split(' - ')[0],
             'endTime': period['time']!.split(' - ')[1],
-            'period': period['label'],
-            'day': selectedDay,
-          });
+          };
         }
-        
+
+        // Save the schedule for the current day in a single document
+        await FirebaseFirestore.instance.collection('Schedule').doc('${widget.teacherName}_$selectedDay').set({
+          'teacherName': widget.teacherName,
+          'day': selectedDay,
+          'periods': daySchedule,
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$selectedDay schedule saved')),
         );
