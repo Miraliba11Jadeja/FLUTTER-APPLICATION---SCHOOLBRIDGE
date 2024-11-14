@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io'; // For handling file operations
+import 'dart:io';
 
 class EditTeacher extends StatefulWidget {
   @override
