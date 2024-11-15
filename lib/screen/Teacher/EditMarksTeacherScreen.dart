@@ -139,7 +139,7 @@ class _EditMarksScreenState extends State<EditMarksScreen> {
                     onPressed: _addDistribution,
                     child: Text('ADD DISTRIBUTION'),
                     style: ElevatedButton.styleFrom(
-                      primary: Color(0xFF134B70),
+                      backgroundColor: Color(0xFF134B70),
                       padding:
                           EdgeInsets.symmetric(vertical: 14.0, horizontal: 20),
                     ),
@@ -148,7 +148,7 @@ class _EditMarksScreenState extends State<EditMarksScreen> {
                     onPressed: _saveDistributions,
                     child: Text('SAVE DISTRIBUTIONS'),
                     style: ElevatedButton.styleFrom(
-                      primary: Color(0xFF134B70),
+                      backgroundColor: Color(0xFF134B70),
                       padding:
                           EdgeInsets.symmetric(vertical: 14.0, horizontal: 20),
                     ),

@@ -134,7 +134,7 @@ class _ManageMarksScreenState extends State<ManageMarksScreen> {
               },
               child: Text('ENTER'),
               style: ElevatedButton.styleFrom(
-                primary: Color(0xFF134B70),
+                backgroundColor: Color(0xFF134B70),
                 padding: EdgeInsets.symmetric(vertical: 14.0, horizontal: 90),
               ),
             ),
@@ -179,7 +179,7 @@ class _ManageMarksScreenState extends State<ManageMarksScreen> {
               },
               child: Text('SAVE'),
               style: ElevatedButton.styleFrom(
-                primary: Color(0xFF134B70),
+                backgroundColor: Color(0xFF134B70),
                 padding: EdgeInsets.symmetric(vertical: 14.0, horizontal: 90),
               ),
             ),

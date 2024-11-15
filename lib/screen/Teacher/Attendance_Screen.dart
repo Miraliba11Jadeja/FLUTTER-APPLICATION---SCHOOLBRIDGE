@@ -223,7 +223,7 @@ class FilterButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        primary: color,
+        backgroundColor: color,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -494,7 +494,7 @@ class _DetailedAttendancePageState extends State<DetailedAttendancePage> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                primary: Color(0xFF134B70),
+                backgroundColor: Color(0xFF134B70),
                 padding: EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),

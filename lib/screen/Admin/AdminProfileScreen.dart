@@ -183,7 +183,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                       _showImageSourceActionSheet(context, adminId);
                     },
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.white,
+                      backgroundColor: Colors.white,
                       side: BorderSide(color: Colors.black),
                     ),
                     child: Text(

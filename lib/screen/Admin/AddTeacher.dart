@@ -231,7 +231,7 @@ Future<void> _submitForm() async {
                   onPressed: _submitForm,
                   child: Text('SUBMIT'),
                   style: ElevatedButton.styleFrom(
-                    primary: Color(0xFF134B70),
+                    backgroundColor: Color(0xFF134B70),
                     padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),

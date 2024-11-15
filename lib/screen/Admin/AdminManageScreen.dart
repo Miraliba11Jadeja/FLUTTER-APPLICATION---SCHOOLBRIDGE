@@ -23,7 +23,19 @@ class AdminManageScreen extends StatelessWidget {
             ),
           ),
         ),
-        title: Text('Welcome, AdminName'),
+        title: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('Admin').snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Text('Loading...');
+            }
+
+            var adminData = snapshot.data!.docs.first; // Get the first document
+            String adminName = adminData['Name'] ?? 'Admin'; // Fetch admin name
+            return Text('Welcome, $adminName', 
+                        style: TextStyle(color: Colors.white),);
+          },
+        ),
         backgroundColor: Color(0xFF134B70),
         actions: [
           Padding(
@@ -39,7 +51,7 @@ class AdminManageScreen extends StatelessWidget {
                   );
                 }
 
-                var adminData = snapshot.data!.docs.first; // Get the first document
+                var adminData = snapshot.data!.docs.first;
                 String profileImageUrl = adminData['profileImageUrl'] ?? '';
 
                 return GestureDetector(
@@ -181,13 +193,13 @@ class AdminButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          primary: isLogout ? Color(0xFFCC3F4D) : Color(0xFF134B70),
+          backgroundColor: isLogout ? Color(0xFFCC3F4D) : Color(0xFF134B70),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
         ),
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 70), // Padding inside the button
+          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 50), // Padding inside the button
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

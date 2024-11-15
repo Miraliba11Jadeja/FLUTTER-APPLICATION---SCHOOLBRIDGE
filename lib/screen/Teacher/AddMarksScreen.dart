@@ -89,7 +89,7 @@ class _AddMarksScreenState extends State<AddMarksScreen> {
             SizedBox(height: 40),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                primary: Color(0xFF134B70), // Dark Blue color for the button
+                backgroundColor: Color(0xFF134B70), // Dark Blue color for the button
                 padding: EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

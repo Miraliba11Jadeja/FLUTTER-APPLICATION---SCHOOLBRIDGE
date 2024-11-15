@@ -39,10 +39,10 @@ dependencies:
   cupertino_icons: ^1.0.2
   shared_preferences: ^2.2.3
   flutter_launcher_icons: ^0.13.1
-  firebase_core: ^2.24.2
-  firebase_auth: ^4.16.0
-  cloud_firestore: ^4.14.0
-  firebase_storage: ^11.6.0
+  firebase_core: ^3.2.0
+  firebase_auth: ^5.3.3
+  cloud_firestore: ^5.1.0
+  firebase_storage: ^12.1.1
   table_calendar: ^3.0.8
 
 dev_dependencies:

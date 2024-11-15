@@ -101,7 +101,7 @@ class _EditTeacherState extends State<EditTeacher> {
                   style: TextStyle(color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
-                  primary: Color(0xFF134B70),
+                  backgroundColor: Color(0xFF134B70),
                   elevation: 0,
                 ),
               ),
@@ -134,7 +134,7 @@ class _EditTeacherState extends State<EditTeacher> {
                 },
                 child: Text('SUBMIT'),
                 style: ElevatedButton.styleFrom(
-                  primary: Color(0xFF134B70),
+                  backgroundColor: Color(0xFF134B70),
                   padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                   textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
