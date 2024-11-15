@@ -14,8 +14,22 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Hide debug banner
-      home: LoginAs(), // Navigate to your login screen
-    ); 
+      theme: ThemeData(
+        appBarTheme: AppBarTheme(
+          color: Color(0xFF134B70), // AppBar background color
+          iconTheme: IconThemeData(
+            color: Colors.white, // Color of the AppBar icons (back arrow, etc.)
+            size: 23, // Size of the AppBar icons
+          ),
+          titleTextStyle: TextStyle(
+            color: Colors.white, // Color of the AppBar title
+            fontSize: 20, // Font size of the AppBar title
+            fontWeight: FontWeight.bold, // Font weight of the AppBar title
+          ),
+        ),
+      ),
+      debugShowCheckedModeBanner: false, // Hide the debug banner
+      home: LoginAs(), // Your login screen
+    );
   }
 }

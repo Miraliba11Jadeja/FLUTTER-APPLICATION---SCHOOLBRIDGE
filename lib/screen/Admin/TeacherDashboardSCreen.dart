@@ -16,20 +16,21 @@ class TeacherDashboardScreen extends StatelessWidget {
             Navigator.of(context).pop();
           },
           child: Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(6.0),
             child: Image.asset(
               'assets/back.png', // Ensure the correct path to your back icon image
               fit: BoxFit.contain,
             ),
           ),
         ),    
-        title: Text('Dashboard'),
+        title: Text('Dashboard',
+              style: TextStyle(color: Colors.white),),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: GridView.count(
           crossAxisCount: 3, // Display 3 items per row
-          crossAxisSpacing: 10,
+          crossAxisSpacing: 5,
           mainAxisSpacing: 20,
           children: [
             _buildDashboardItem(
