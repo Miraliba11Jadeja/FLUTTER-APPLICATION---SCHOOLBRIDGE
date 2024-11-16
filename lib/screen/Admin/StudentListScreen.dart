@@ -172,11 +172,11 @@ class _StudentListScreenState extends State<StudentListScreen> {
                             IconButton(
                               icon: Icon(Icons.edit, color: Colors.blue),
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => EditTeacher()),
-                                );
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //       //builder: (context) => EditTeacher()),
+                                // );
                               },
                             ),
                             IconButton(

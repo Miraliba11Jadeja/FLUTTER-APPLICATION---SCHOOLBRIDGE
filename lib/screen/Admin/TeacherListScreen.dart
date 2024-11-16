@@ -11,7 +11,7 @@ class TeacherListScreen extends StatefulWidget {
 class _TeacherListScreenState extends State<TeacherListScreen> {
   // Function to delete a teacher after confirmation
   void _deleteTeacher(String docId) {
-    FirebaseFirestore.instance.collection('teachers').doc(docId).delete();
+    FirebaseFirestore.instance.collection('Teacher').doc(docId).delete();
   }
 
   // Function to show confirmation dialog
@@ -170,15 +170,21 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () {
-                                // Navigate to EditTeacher screen
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => EditTeacher()),
-                                );
-                              },
-                            ),
+                            icon: Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            // Navigate to EditTeacher screen with the teacher's data or ID
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EditTeacherProfileScreen(
+                                  teacherId: docId, // Pass the document ID
+                                  teacherData: teacherData, // Pass the teacher's current data
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
                             IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
                               onPressed: () {

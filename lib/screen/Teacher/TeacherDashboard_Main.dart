@@ -36,12 +36,12 @@ class TeacherDashboardScreenMain extends StatelessWidget {
               label: "PROFILE",
               onTap: () {
                 // Navigate to Teacher List Section
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditTeacher(),
-                  ),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => EditTeacher(),
+                //   ),
+                // );
               },
             ),
             _buildDashboardItem(

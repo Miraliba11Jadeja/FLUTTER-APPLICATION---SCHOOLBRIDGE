@@ -38,7 +38,7 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
   Future<void> _fetchClasses() async {
     final classSnapshot = await FirebaseFirestore.instance.collection('Class').get();
     setState(() {
-      classes = classSnapshot.docs.map((doc) => doc['Class'] as String).toList();
+      classes = ['No'] + classSnapshot.docs.map((doc) => doc['Class'] as String).toList();
     });
   }
 
@@ -56,54 +56,89 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
   }
 
   Future<void> _saveScheduleForDay() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        final selectedDay = days[currentDayIndex];
+  if (_formKey.currentState!.validate()) {
+    final selectedDay = days[currentDayIndex];
 
-        // Prepare the schedule map for the current day
-        Map<String, dynamic> daySchedule = {};
-        for (int i = 0; i < periods.length; i++) {
-          final period = periods[i];
-          final periodLabel = period['label']!;
-          daySchedule[periodLabel] = {
-            'class': selectedClass[selectedDay]?[periodLabel] ?? '',
-            'subject': selectedSubject[selectedDay]?[periodLabel] ?? 'Free',
-            'startTime': period['time']!.split(' - ')[0],
-            'endTime': period['time']!.split(' - ')[1],
-          };
-        }
+    try {
+      for (int i = 0; i < periods.length; i++) {
+        final period = periods[i];
+        final periodLabel = period['label']!;
+        final selectedClassValue = selectedClass[selectedDay]?[periodLabel] ?? '';
+        final selectedSubjectValue = selectedSubject[selectedDay]?[periodLabel] ?? 'Free';
 
-        // Save the schedule for the current day in a single document
-        await FirebaseFirestore.instance.collection('Schedule').doc('${widget.teacherName}_$selectedDay').set({
-          'teacherName': widget.teacherName,
-          'day': selectedDay,
-          'periods': daySchedule,
-        });
+        // Skip checking if the class is "Free"
+        if (selectedSubjectValue == 'Free') continue;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$selectedDay schedule saved')),
-        );
+        // Query Firestore to check for conflicts
+        final conflictSnapshot = await FirebaseFirestore.instance
+            .collection('Schedule')
+            .where('day', isEqualTo: selectedDay)
+            .where('periods.$periodLabel.class', isEqualTo: selectedClassValue)
+            .where('periods.$periodLabel.startTime', isEqualTo: period['time']!.split(' - ')[0])
+            .where('periods.$periodLabel.endTime', isEqualTo: period['time']!.split(' - ')[1])
+            .get();
 
-        if (currentDayIndex < days.length - 1) {
-          // Move to the next day and reset the form
-          setState(() {
-            currentDayIndex++;
-            selectedClass.clear();
-            selectedSubject.clear();
-          });
-        } else {
+        if (conflictSnapshot.docs.isNotEmpty) {
+          // Conflict found: Display a warning and stop saving
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('All schedules added successfully')),
+            SnackBar(
+              content: Text(
+                'Conflict detected: Class $selectedClassValue for ${period['time']} on $selectedDay is already assigned to another teacher.',
+              ),
+              backgroundColor: Colors.red,
+            ),
           );
+          return; // Stop execution
         }
-      } catch (e) {
-        print("Error saving schedule: $e");
+      }
+
+      // Prepare the schedule map for the current day
+      Map<String, dynamic> daySchedule = {};
+      for (int i = 0; i < periods.length; i++) {
+        final period = periods[i];
+        final periodLabel = period['label']!;
+        daySchedule[periodLabel] = {
+          'class': selectedSubject[selectedDay]?[periodLabel] == 'Free'
+              ? '' // If subject is "Free", save an empty class
+              : selectedClass[selectedDay]?[periodLabel] ?? '',
+          'subject': selectedSubject[selectedDay]?[periodLabel] ?? 'Free',
+          'startTime': period['time']!.split(' - ')[0],
+          'endTime': period['time']!.split(' - ')[1],
+        };
+      }
+
+      // Save the schedule for the current day in a single document
+      await FirebaseFirestore.instance.collection('Schedule').doc('${widget.teacherName}_$selectedDay').set({
+        'teacherName': widget.teacherName,
+        'day': selectedDay,
+        'periods': daySchedule,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$selectedDay schedule saved')),
+      );
+
+      if (currentDayIndex < days.length - 1) {
+        // Move to the next day and reset the form
+        setState(() {
+          currentDayIndex++;
+          selectedClass.clear();
+          selectedSubject.clear();
+        });
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save schedule: $e')),
+          SnackBar(content: Text('All schedules added successfully')),
         );
       }
+    } catch (e) {
+      print("Error saving schedule: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save schedule: $e')),
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -141,13 +176,25 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
                             );
                           }).toList(),
                           onChanged: (value) {
-                            setState(() {
-                              selectedClass[selectedDay] ??= {};
-                              selectedClass[selectedDay]![period['label']!] = value;
-                            });
+                            if (selectedSubject[selectedDay]?[period['label']] != 'Free') {
+                              setState(() {
+                                selectedClass[selectedDay] ??= {};
+                                selectedClass[selectedDay]![period['label']!] = value;
+                              });
+                            }
                           },
-                          validator: (value) => value == null ? 'Please select a class' : null,
+                          validator: (value) {
+                            // Allow class selection if the subject is "Free" or if a class is chosen
+                            if (selectedSubject[selectedDay]?[period['label']] == 'Free') {
+                              return null; // Skip validation for "Free" subject
+                            }
+                            return value == null || value == 'No' ? 'Please select a class' : null;
+                          },
+                          value: selectedSubject[selectedDay]?[period['label']] == 'Free'
+                              ? 'No' // Default to "No" for "Free" subject
+                              : selectedClass[selectedDay]?[period['label']],
                         ),
+
                         DropdownButtonFormField<String>(
                           decoration: InputDecoration(labelText: 'Select Subject'),
                           items: subjects.map((subject) {
@@ -160,6 +207,10 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
                             setState(() {
                               selectedSubject[selectedDay] ??= {};
                               selectedSubject[selectedDay]![period['label']!] = value;
+                              // If subject is "Free", disable the class dropdown
+                              if (value == 'Free') {
+                                selectedClass[selectedDay]?[period['label']!] = 'Free'; // Ensure class is empty for Free subject
+                              }
                             });
                           },
                           validator: (value) => value == null ? 'Please select a subject' : null,

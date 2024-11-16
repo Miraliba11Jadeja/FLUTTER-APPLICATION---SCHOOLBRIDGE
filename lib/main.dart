@@ -27,6 +27,17 @@ class MyApp extends StatelessWidget {
             fontWeight: FontWeight.bold, // Font weight of the AppBar title
           ),
         ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF134B70), // Background color
+            foregroundColor: Colors.white, // Text color
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10), // Rounded corners
+            ),
+            elevation: 5, // Button shadow
+          ),
+        ),
       ),
       debugShowCheckedModeBanner: false, // Hide the debug banner
       home: LoginAs(), // Your login screen
