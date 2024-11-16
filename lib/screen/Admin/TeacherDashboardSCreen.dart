@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/Admin/AnnouncementListScreen.dart';
 import 'package:school_bridge_app/screen/Admin/EventScreen.dart';
 import 'package:school_bridge_app/screen/Admin/HolidayAdminScreen.dart';
 import 'package:school_bridge_app/screen/Admin/SubjectScreen.dart';
@@ -100,7 +101,12 @@ class TeacherDashboardScreen extends StatelessWidget {
               imagePath: 'assets/loudspeaker.png', // Path to your "Announcement" image
               label: "ANNOUNCEMENT",
               onTap: () {
-                // Navigate to Announcement Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AnnouncementListScreen(),
+                  ),
+                );
               },
             ),
           ],
