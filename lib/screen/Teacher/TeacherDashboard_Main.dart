@@ -1,12 +1,21 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
 import 'package:school_bridge_app/screen/Teacher/Attendance_Screen.dart';
 import 'package:school_bridge_app/screen/Teacher/HolidayTeacherScreen.dart';
 import 'package:school_bridge_app/screen/Teacher/MarksTeacherScreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:school_bridge_app/screen/Teacher/SchedduleDisplayScreenT.dart';
 
 class TeacherDashboardScreenMain extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return Center(child: Text('User not logged in'));
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF134B70),
@@ -17,112 +26,191 @@ class TeacherDashboardScreenMain extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Image.asset(
-              'assets/back.png', // Ensure the correct path to your back icon image
+              'assets/back.png',
               fit: BoxFit.contain,
             ),
           ),
         ),
-        title: Text('Dashboard'),
+        title: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('Teacher')
+              .where('Email', isEqualTo: user.email)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Text('Loading...');
+            }
+
+            if (snapshot.data!.docs.isEmpty) {
+              return Text('No teacher data found');
+            }
+
+            var teacherData = snapshot.data!.docs.first;
+            String teacherName = teacherData['Name'] ?? 'Teacher';
+
+            return Text(
+              'Hi, $teacherName',
+              style: TextStyle(color: Colors.white),
+            );
+          },
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 20.0),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Teacher')
+                  .where('Email', isEqualTo: user.email)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey[300],
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                var teacherData = snapshot.data!.docs.first;
+                String profileImageUrl = teacherData['ProfilePicture'] ?? '';
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => EditTeacherProfileScreen(
+                          teacherId: teacherData.id, // Pass the document ID
+                          teacherData: teacherData.data()
+                              as Map<String, dynamic>, // Use .data() to convert
+                        ),
+                      ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage: profileImageUrl.isNotEmpty
+                        ? NetworkImage(profileImageUrl)
+                        : null,
+                    child: profileImageUrl.isEmpty
+                        ? Icon(Icons.person, size: 30, color: Colors.white)
+                        : null,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: GridView.count(
-          crossAxisCount: 3, // Display 3 items per row
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 20,
-          children: [
-            _buildDashboardItem(
-              imagePath: 'assets/SUB.png', // Path to your "Teacher" image
-              label: "PROFILE",
-              onTap: () {
-                // Navigate to Teacher List Section
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => EditTeacher(),
-                //   ),
-                // );
-              },
-            ),
-            _buildDashboardItem(
-              imagePath: 'assets/attendance.png', // Path to your "Holidays" image
-              label: "ATTENDANCE",
-              onTap: () {
-                // Navigate to Holidays Section
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AttendanceScreen(),
-                  ),
-                );
-              },
-            ),
-            
-            _buildDashboardItem(
-              imagePath: 'assets/holidays.png', // Path to your "Holidays" image
-              label: "HOLIDAYS",
-              onTap: () {
-                // Navigate to Holidays Section
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => HolidayTeacherScreen(),
-                  ),
-                );
-              },
-            ),
-            _buildDashboardItem(
-              imagePath: 'assets/score.png', // Path to your "Subject" image
-              label: "MARKS",
-              onTap: () {
-                // Navigate to Subject Section
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MarksScreen(),
-                  ),
-                );
-              },
-            ),
-            _buildDashboardItem(
-              imagePath: 'assets/timetable.png', // Path to your "Schedule" image
-              label: "SCHEDULE",
-              onTap: () {
-                // Navigate to Schedule Section
-              },
-            ),
-            _buildDashboardItem(
-              imagePath: 'assets/chat.png', // Path to your "Feedback" image
-              label: "FEEDBACK",
-              onTap: () {
-                // Navigate to Feedback Section
-              },
-            ),
-            _buildDashboardItem(
-              imagePath: 'assets/calendar.png', // Path to your "Event" image
-              label: "EVENT",
-              onTap: () {
-                // Navigate to Event Section
-              },
-            ),
-            _buildDashboardItem(
-              imagePath: 'assets/loudspeaker.png', // Path to your "Announcement" image
-              label: "ANNOUNCEMENT",
-              onTap: () {
-                // Navigate to Announcement Section
-              },
-            ),
-          ],
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('Teacher')
+              .where('Email', isEqualTo: user.email)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            var teacherData = snapshot.data!.docs.first;
+            String teacherName = teacherData['Name'] ?? 'Teacher';
+
+            return GridView.count(
+              crossAxisCount: 3,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 20,
+              children: [
+                _buildDashboardItem(
+                  imagePath: 'assets/attendance.png',
+                  label: "ATTENDANCE",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AttendanceScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDashboardItem(
+                  imagePath: 'assets/holidays.png',
+                  label: "HOLIDAYS",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HolidayTeacherScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDashboardItem(
+                  imagePath: 'assets/score.png',
+                  label: "MARKS",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MarksScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDashboardItem(
+                  imagePath: 'assets/timetable.png',
+                  label: "SCHEDULE",
+                  onTap: () async {
+                    final scheduleDocs = await FirebaseFirestore.instance
+                        .collection('Schedule')
+                        .where('teacherName', isEqualTo: teacherName)
+                        .get();
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ScheduleDisplayScreen(
+                          teacherName: teacherName, // Pass teacherName
+                          scheduleDocs: scheduleDocs.docs, // Pass scheduleDocs
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                _buildDashboardItem(
+                  imagePath: 'assets/chat.png',
+                  label: "FEEDBACK",
+                  onTap: () {
+                    // Navigate to Feedback Section
+                  },
+                ),
+                _buildDashboardItem(
+                  imagePath: 'assets/calendar.png',
+                  label: "EVENT",
+                  onTap: () {
+                    // Navigate to Event Section
+                  },
+                ),
+                _buildDashboardItem(
+                  imagePath: 'assets/loudspeaker.png',
+                  label: "ANNOUNCEMENT",
+                  onTap: () {
+                    // Navigate to Announcement Section
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  // Helper method to build each dashboard item
   Widget _buildDashboardItem({
-    required String imagePath, // Use image path for the image in the dashboard
-    required String label, // Label below the icon
-    required VoidCallback onTap, // Callback for click action
+    required String imagePath,
+    required String label,
+    required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -131,84 +219,25 @@ class TeacherDashboardScreenMain extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Color(0xFF134B70), // Icon container background color
-              borderRadius: BorderRadius.circular(10), // Rounded corners
+              color: Color(0xFF134B70),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Image.asset(
-              imagePath, // Image asset reference
-              width: 45, // Image width
-              height: 45, // Image height
-              fit: BoxFit.contain, // Ensure image scales correctly
-            ),
-          ),
-          SizedBox(height: 10), // Space between image and label
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12, // Font size of label
-              fontWeight: FontWeight.bold, // Bold label text
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-// New TeacherDetailScreen to display the details of a tapped teacher
-class TeacherDetailScreen extends StatelessWidget {
-  final Map<String, String> teacher;
-
-  TeacherDetailScreen({required this.teacher});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: GestureDetector(
-          onTap: () {
-            Navigator.of(context).pop();
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.asset(
-              'assets/back.png', // Ensure the correct path to your back icon image
+              imagePath,
+              width: 45,
+              height: 45,
               fit: BoxFit.contain,
             ),
           ),
-        ),
-        title: Text(teacher['name'] ?? 'Teacher Detail'),
-        backgroundColor: Color(0xFF134B70),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "NAME: ${teacher['name']}",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          SizedBox(height: 10),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.9,
+              fontWeight: FontWeight.bold,
             ),
-            SizedBox(height: 4),
-            Text(
-              "SUBJECT: ${teacher['subject']}",
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 4),
-            Text(
-              "CLASSES: ${teacher['classes']}",
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 4),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("Back to List"),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:school_bridge_app/screen/Admin/AddStudent.dart';
 import 'package:school_bridge_app/screen/Admin/AddTeacher.dart';
+import 'package:school_bridge_app/screen/Admin/EditStudentScreen.dart';
 import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
 
 class StudentListScreen extends StatefulWidget {
@@ -172,11 +174,11 @@ class _StudentListScreenState extends State<StudentListScreen> {
                             IconButton(
                               icon: Icon(Icons.edit, color: Colors.blue),
                               onPressed: () {
-                                // Navigator.push(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //       //builder: (context) => EditTeacher()),
-                                // );
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => EditStudent()),
+                                );
                               },
                             ),
                             IconButton(
@@ -200,7 +202,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddTeacher()),
+            MaterialPageRoute(builder: (context) => AddStudent()),
           );
         },
         child: Icon(Icons.add),
