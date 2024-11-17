@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/Admin/AnnouncementListScreen.dart';
 import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
+import 'package:school_bridge_app/screen/Admin/EventScreen.dart';
 import 'package:school_bridge_app/screen/Teacher/Attendance_Screen.dart';
+import 'package:school_bridge_app/screen/Teacher/FeedBack.dart';
 import 'package:school_bridge_app/screen/Teacher/HolidayTeacherScreen.dart';
 import 'package:school_bridge_app/screen/Teacher/MarksTeacherScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -182,21 +185,30 @@ class TeacherDashboardScreenMain extends StatelessWidget {
                   imagePath: 'assets/chat.png',
                   label: "FEEDBACK",
                   onTap: () {
-                    // Navigate to Feedback Section
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FeedbackScreen(), // Replace ChatScreen with the actual chat screen
+                      ),
+                       );
                   },
                 ),
                 _buildDashboardItem(
                   imagePath: 'assets/calendar.png',
                   label: "EVENT",
                   onTap: () {
-                    // Navigate to Event Section
+                    Navigator.push(context,
+                     MaterialPageRoute(builder: (context) => EventScreen(),
+                     ),
+                    );
                   },
                 ),
                 _buildDashboardItem(
                   imagePath: 'assets/loudspeaker.png',
                   label: "ANNOUNCEMENT",
                   onTap: () {
-                    // Navigate to Announcement Section
+                    Navigator.push(context,
+                     MaterialPageRoute(builder: (context) => AnnouncementListScreen()),);
                   },
                 ),
               ],
