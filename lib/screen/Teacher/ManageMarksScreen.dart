@@ -26,8 +26,10 @@ class _ManageMarksScreenState extends State<ManageMarksScreen> {
 
   // Function to dynamically add text fields based on number of distributions
   void _generateFields(int numberOfDistributions) {
-    _distributionNameControllers = List.generate(numberOfDistributions, (index) => TextEditingController());
-    _totalMarksControllers = List.generate(numberOfDistributions, (index) => TextEditingController());
+    _distributionNameControllers = List.generate(
+        numberOfDistributions, (index) => TextEditingController());
+    _totalMarksControllers = List.generate(
+        numberOfDistributions, (index) => TextEditingController());
   }
 
   @override
@@ -49,7 +51,6 @@ class _ManageMarksScreenState extends State<ManageMarksScreen> {
       fields.add(
         Column(
           children: [
-            
             TextFormField(
               controller: _distributionNameControllers[i],
               decoration: InputDecoration(
@@ -107,8 +108,7 @@ class _ManageMarksScreenState extends State<ManageMarksScreen> {
                 labelText: 'No of Distribution',
                 border: OutlineInputBorder(),
               ),
-              items: List.generate(10, (index) => index + 1)
-                  .map((int value) {
+              items: List.generate(10, (index) => index + 1).map((int value) {
                 return DropdownMenuItem<int>(
                   value: value,
                   child: Text(value.toString()),
@@ -156,8 +156,10 @@ class _ManageMarksScreenState extends State<ManageMarksScreen> {
                 if (_selectedDistributions != null) {
                   // Handle the save logic
                   for (int i = 0; i < _selectedDistributions!; i++) {
-                    print("Distribution ${i + 1} Name: ${_distributionNameControllers[i].text}");
-                    print("Distribution ${i + 1} Marks: ${_totalMarksControllers[i].text}");
+                    print(
+                        "Distribution ${i + 1} Name: ${_distributionNameControllers[i].text}");
+                    print(
+                        "Distribution ${i + 1} Marks: ${_totalMarksControllers[i].text}");
                   }
 
                   // Show a snackbar indicating the data is saved
