@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:school_bridge_app/screen/Teacher/AddMarksScreen.dart';
+import 'package:school_bridge_app/screen/Teacher/EditMarksListScreen.dart';
 import 'package:school_bridge_app/screen/Teacher/EditMarksTeacherScreen.dart';
 import 'package:school_bridge_app/screen/Teacher/ManageMarksScreen.dart';
 
@@ -142,7 +143,7 @@ class MarksScreen extends StatelessWidget {
   void _onEditMarks(BuildContext context) {
     // Navigate to Edit Marks screen
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => EditMarksScreen()));
+        context, MaterialPageRoute(builder: (context) => EditMarksList()));
   }
 
   void _onAddMarks(BuildContext context) {

@@ -140,16 +140,6 @@ class AdminManageScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  SizedBox(height: 10),
-                  AdminButton(
-                    icon: Icons.home,
-                    text: "GENERAL",
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => GeneralDashboardScreen()),
-                      );
-                    },
-                  ),
                 ],
               ),
             ),

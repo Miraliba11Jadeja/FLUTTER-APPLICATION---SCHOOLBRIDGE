@@ -1,70 +1,117 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() {
-  runApp(MarksApp());
-}
 
-class MarksApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: EditMarksScreen(),
-    );
-  }
-}
 
 class EditMarksScreen extends StatefulWidget {
+  final String selectedClass;
+  final String selectedSubject;
+
+  EditMarksScreen({required this.selectedClass, required this.selectedSubject});
+
   @override
   _EditMarksScreenState createState() => _EditMarksScreenState();
 }
 
 class _EditMarksScreenState extends State<EditMarksScreen> {
-  List<Map<String, dynamic>> distributions = [
-    {"name": "Reading", "marks": "20"},
-    {"name": "Writing", "marks": "20"},
-    {"name": "Speaking", "marks": "20"}
-  ];
-
-  // Controllers for each distribution
+  List<Map<String, dynamic>> distributions = [];
   List<TextEditingController> nameControllers = [];
   List<TextEditingController> marksControllers = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _initializeControllers();
+    _fetchDistributions();
   }
 
-  // Initialize controllers for each distribution field
-  void _initializeControllers() {
-    nameControllers = distributions
-        .map((dist) => TextEditingController(text: dist['name']))
-        .toList();
-    marksControllers = distributions
-        .map((dist) => TextEditingController(text: dist['marks']))
-        .toList();
+  // Fetch distributions from Firestore
+  Future<void> _fetchDistributions() async {
+    try {
+      QuerySnapshot query = await FirebaseFirestore.instance
+          .collection('markslist')
+          .where('class', isEqualTo: widget.selectedClass)
+          .where('subject', isEqualTo: widget.selectedSubject)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        final data = query.docs.first.data() as Map<String, dynamic>;
+
+        if (data.containsKey('distributions')) {
+          setState(() {
+            distributions = List<Map<String, dynamic>>.from(data['distributions']);
+
+            // Initialize controllers with fetched data
+            nameControllers = distributions
+                .map((dist) => TextEditingController(text: dist['distribution_name']))
+                .toList();
+            marksControllers = distributions
+                .map((dist) => TextEditingController(text: dist['total_marks'].toString()))
+                .toList();
+          });
+        }
+      } else {
+        print('No matching document found for the selected class and subject.');
+      }
+    } catch (e) {
+      print('Error fetching distributions: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
-  // Function to add a new distribution
+  // Save updated distributions back to Firestore
+  Future<void> _saveDistributions() async {
+    try {
+      // Update local list with edited data
+      for (int i = 0; i < distributions.length; i++) {
+        distributions[i]['distribution_name'] = nameControllers[i].text;
+        distributions[i]['total_marks'] = int.tryParse(marksControllers[i].text) ?? 0;
+      }
+
+      // Update Firestore document
+      QuerySnapshot query = await FirebaseFirestore.instance
+          .collection('markslist')
+          .where('class', isEqualTo: widget.selectedClass)
+          .where('subject', isEqualTo: widget.selectedSubject)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        String docId = query.docs.first.id;
+
+        await FirebaseFirestore.instance
+            .collection('markslist')
+            .doc(docId)
+            .update({'distributions': distributions});
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Distributions updated successfully!'),
+          backgroundColor: Colors.green,
+        ));
+      } else {
+        print('No document found to update.');
+      }
+    } catch (e) {
+      print('Error saving distributions: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Failed to save distributions. Please try again.'),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
+
+  // Add a new distribution
   void _addDistribution() {
     setState(() {
-      distributions.add({"name": "", "marks": ""});
+      distributions.add({"distribution_name": "", "total_marks": 0});
       nameControllers.add(TextEditingController());
       marksControllers.add(TextEditingController());
     });
   }
 
-  // Function to update the list of distributions (editing or saving)
-  void _saveDistributions() {
-    setState(() {
-      for (int i = 0; i < distributions.length; i++) {
-        distributions[i]["name"] = nameControllers[i].text;
-        distributions[i]["marks"] = marksControllers[i].text;
-      }
-    });
-  }
-
-  // Build distribution fields
+  // Build the UI for each distribution
   Widget _buildDistributionFields() {
     return Column(
       children: distributions.asMap().entries.map((entry) {
@@ -112,53 +159,46 @@ class _EditMarksScreenState extends State<EditMarksScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            // Handle back button press
             Navigator.pop(context);
           },
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: () {
-              // Handle menu button press
-            },
-          ),
-        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(7.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDistributionFields(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: _addDistribution,
-                    child: Text('ADD DISTRIBUTION'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF134B70),
-                      padding:
-                          EdgeInsets.symmetric(vertical: 14.0, horizontal: 20),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(7.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDistributionFields(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _addDistribution,
+                          child: Text('ADD DISTRIBUTION'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF134B70),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 14.0, horizontal: 17),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: _saveDistributions,
+                          child: Text('SAVE DISTRIBUTIONS'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFF134B70),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 14.0, horizontal: 17),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  ElevatedButton(
-                    onPressed: _saveDistributions,
-                    child: Text('SAVE DISTRIBUTIONS'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF134B70),
-                      padding:
-                          EdgeInsets.symmetric(vertical: 14.0, horizontal: 20),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

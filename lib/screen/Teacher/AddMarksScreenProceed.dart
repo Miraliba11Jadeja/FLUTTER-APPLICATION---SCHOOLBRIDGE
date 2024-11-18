@@ -27,6 +27,7 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
 
   // List to store students' data fetched from Firestore
   List<Map<String, dynamic>> students = [];
+  List<Map<String, dynamic>> distributions = [];
 
   @override
   void initState() {
@@ -36,11 +37,11 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
     selectedType = widget.selectedType;
     selectedExam = widget.selectedExam;
 
-    // Fetch students' data from Firestore when the screen is initialized
-    _fetchStudents();
+    // Fetch students' data and distributions when the screen is initialized
+    _fetchStudentsAndDistributions();
   }
 
-  Future<void> _fetchStudents() async {
+  Future<void> _fetchStudentsAndDistributions() async {
     try {
       print("Fetching students for class: $selectedClass");
 
@@ -55,23 +56,25 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
       // Fetch the distributions for the selected class and subject
       QuerySnapshot marksQuery = await FirebaseFirestore.instance
           .collection('markslist')
-          .where('ClassName', isEqualTo: selectedClass)
-          .where('SubjectName', isEqualTo: selectedSubject)
+          .where('class', isEqualTo: selectedClass)
+          .where('subject', isEqualTo: selectedSubject)
           .get();
 
       if (studentQuery.docs.isEmpty || marksQuery.docs.isEmpty) {
-        print(
-            "No data found for the class: $selectedClass and subject: $selectedSubject");
+        print("No data found for the class: $selectedClass and subject: $selectedSubject");
         return;
       }
 
-      // Extract distribution names from the fetched markslist
-      List<String> distributions = [];
+      // Extract distributions from the fetched markslist
+      List<Map<String, dynamic>> fetchedDistributions = [];
       for (var doc in marksQuery.docs) {
         final data = doc.data() as Map<String, dynamic>;
-        if (data.containsKey('Distributions')) {
-          for (var dist in data['Distributions']) {
-            distributions.add(dist['DistributionName']);
+        if (data.containsKey('distributions')) {
+          for (var dist in data['distributions']) {
+            fetchedDistributions.add({
+              'name': dist['distribution_name'],
+              'totalMarks': dist['total_marks'] ?? 0,
+            });
           }
         }
       }
@@ -84,8 +87,8 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
         final data = doc.data() as Map<String, dynamic>;
         if (data.containsKey('Name') && data['Name'] != null) {
           Map<String, TextEditingController> marksControllers = {};
-          for (var dist in distributions) {
-            marksControllers[dist] = TextEditingController(text: '0');
+          for (var dist in fetchedDistributions) {
+            marksControllers[dist['name']] = TextEditingController(text: '0');
           }
 
           studentList.add({
@@ -99,6 +102,7 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
 
       setState(() {
         students = studentList;
+        distributions = fetchedDistributions; // Store distributions for later use
         print("Students and distributions fetched successfully.");
       });
     } catch (e) {
@@ -106,75 +110,65 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
     }
   }
 
-  void saveMarks() async {
+Future<void> saveMarks() async {
+  try {
     List<Map<String, dynamic>> savedMarks = students.map((student) {
-      Map<String, int> marks = {}; // To hold individual distribution marks
-      int totalMarks = 0; // To hold the total marks for the student
+      Map<String, int> marks = {};
+      int totalMarks = 0;
 
       student['marks'].forEach((key, controller) {
         int mark = int.tryParse(controller.text) ?? 0;
-        marks[key] = mark; // Save the marks for each distribution
-        totalMarks += mark; // Add to the total marks (scored marks)
+        marks[key] = mark;
+        totalMarks += mark;
       });
 
       return {
         'sno': student['sno'],
         'name': student['name'],
-        'marks': marks, // Save marks for all distributions
-        'totalMarks': totalMarks, // Save the total marks for the student
+        'marks': marks,
+        'totalMarks': totalMarks,
       };
     }).toList();
 
-    // Save data to Firestore
-    try {
-      for (var studentMarks in savedMarks) {
-        // Save each student's marks in the Firestore collection 'Marks'
-        await FirebaseFirestore.instance.collection('Marks').add({
-          'class': selectedClass,
-          'subject': selectedSubject,
-          'exam': selectedExam,
-          'type': selectedType,
-          'sno': studentMarks['sno'],
-          'name': studentMarks['name'],
-          'marks': studentMarks['marks'],
-          'totalMarks': studentMarks['totalMarks'], // Save total marks
-          'timestamp': FieldValue
-              .serverTimestamp(), // To store the time the document was created
-        });
-      }
+    print("Saving Marks Data: $savedMarks");
 
-      // Calculate the total marks for the entire class
-      int classTotalMarks = savedMarks.fold(0, (int sum, student) {
-        return sum + (student['totalMarks'] as int);
-      });
-
-      // Save the total marks for the class in a separate document or collection
-      await FirebaseFirestore.instance
-          .collection('ClassTotals')
-          .doc(selectedClass)
-          .set({
+    for (var studentMarks in savedMarks) {
+      await FirebaseFirestore.instance.collection('Marks').add({
         'class': selectedClass,
         'subject': selectedSubject,
         'exam': selectedExam,
-        'totalMarks':
-            classTotalMarks, // Total marks for all students in the class
+        'type': selectedType,
+        'sno': studentMarks['sno'],
+        'name': studentMarks['name'],
+        'marks': studentMarks['marks'],
+        'totalMarks': studentMarks['totalMarks'],
         'timestamp': FieldValue.serverTimestamp(),
       });
-
-      // Show a success message after saving the data
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Marks saved successfully!'),
-        backgroundColor: Colors.green,
-      ));
-    } catch (e) {
-      // Handle any errors during the saving process
-      print("Error saving marks: $e");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to save marks. Please try again.'),
-        backgroundColor: Colors.red,
-      ));
     }
+
+    int classTotalMarks = savedMarks.fold(0, (sum, student) => sum + (student['totalMarks'] as int));
+
+    await FirebaseFirestore.instance.collection('ClassTotals').doc(selectedClass).set({
+      'class': selectedClass,
+      'subject': selectedSubject,
+      'exam': selectedExam,
+      'totalMarks': classTotalMarks,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Marks saved successfully!'),
+      backgroundColor: Colors.green,
+    ));
+  } catch (e) {
+    print("Error saving marks: $e");
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Failed to save marks. Please try again.'),
+      backgroundColor: Colors.red,
+    ));
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -204,14 +198,10 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${selectedClass}',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('${selectedExam}',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('${selectedSubject}',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('${selectedType}',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('${selectedClass}', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('${selectedExam}', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('${selectedSubject}', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('${selectedType}', style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             SizedBox(height: 20),
@@ -221,36 +211,23 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
                 child: DataTable(
                   columnSpacing: 20,
                   columns: [
-                    DataColumn(
-                        label: Text('SNo',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(
-                        label: Text('Name',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
-                    ...students.isNotEmpty && students[0]['marks'] != null
-                        ? students[0]['marks'].keys.map((distName) {
+                    DataColumn(label: Text('SNo', style: TextStyle(fontWeight: FontWeight.bold))),
+                    DataColumn(label: Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
+                    ...distributions.isNotEmpty
+                        ? distributions.map((dist) {
                             return DataColumn(
-                                label: Text(distName,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold)));
+                              label: Text('${dist['name']} (${dist['totalMarks']})', style: TextStyle(fontWeight: FontWeight.bold)),
+                            );
                           }).toList()
-                        : [], // If marks are null, no distribution columns will be shown
-                    DataColumn(
-                        label: Text('Total Marks',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
+                        : [],
                   ],
                   rows: students.map((student) {
                     return DataRow(cells: [
                       DataCell(Text(student['sno'].toString())),
                       DataCell(Text(student['name'])),
-                      ...student['marks'] != null
-                          ? student['marks'].keys.map((distName) {
-                              return DataCell(_buildMarksInputField(
-                                  student['marks'][distName]));
-                            }).toList()
-                          : [], // If marks are null, no cells will be rendered
-                      DataCell(Text(student['totalMarks']
-                          .toString())), // Display the total marks for the student
+                      ...distributions.map((dist) {
+                        return DataCell(_buildMarksInputField(student['marks'][dist['name']])); 
+                      }).toList(),
                     ]);
                   }).toList(),
                 ),
@@ -260,16 +237,10 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF134B70),
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               ),
               onPressed: saveMarks,
-              child: Text(
-                'SAVE',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
+              child: Text('Save Marks', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -278,20 +249,13 @@ class _AddMarksScreenProceedState extends State<AddMarksScreenProceed> {
   }
 
   Widget _buildMarksInputField(TextEditingController controller) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 4),
-      width: 50,
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        hintText: '0',
+        border: OutlineInputBorder(),
       ),
+      keyboardType: TextInputType.number,
     );
   }
 }

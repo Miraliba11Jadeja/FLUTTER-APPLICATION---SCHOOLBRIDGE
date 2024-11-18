@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:school_bridge_app/screen/Teacher/AddMarksScreenProceed.dart';
+import 'package:school_bridge_app/screen/Teacher/EditMarksTeacherScreen.dart';
+
 
 void main() {
   runApp(AddMarksApp());
@@ -10,21 +11,19 @@ class AddMarksApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: AddMarksScreen(),
+      home: EditMarksList(),
     );
   }
 }
 
-class AddMarksScreen extends StatefulWidget {
+class EditMarksList extends StatefulWidget {
   @override
-  _AddMarksScreenState createState() => _AddMarksScreenState();
+  _EditMarksListState createState() => _EditMarksListState();
 }
 
-class _AddMarksScreenState extends State<AddMarksScreen> {
+class _EditMarksListState extends State<EditMarksList> {
   String? selectedClass;
   String? selectedSubject;
-  String? selectedType;
-  String? selectedExam;
 
   @override
   Widget build(BuildContext context) {
@@ -72,31 +71,7 @@ class _AddMarksScreenState extends State<AddMarksScreen> {
             const SizedBox(height: 16),
 
             // Dropdown for Type
-            buildDropdownButton(
-              'Select Type',
-              ['Assignment', 'Quiz'], // Static list
-              selectedType,
-              (value) {
-                setState(() {
-                  selectedType = value;
-                });
-              },
-              null, // No collection needed
-            ),
-            const SizedBox(height: 16),
-
-            // Dropdown for Exam
-            buildDropdownButton(
-              'Select Exam',
-              ['Midterm', 'Final'], // Static list
-              selectedExam,
-              (value) {
-                setState(() {
-                  selectedExam = value;
-                });
-              },
-              null, // No collection needed
-            ),
+           
             const SizedBox(height: 40),
 
             // Proceed Button
@@ -112,9 +87,8 @@ class _AddMarksScreenState extends State<AddMarksScreen> {
               onPressed: () async {
                 // Validate that all dropdown values are selected
                 if (selectedClass == null ||
-                    selectedSubject == null ||
-                    selectedType == null ||
-                    selectedExam == null) {
+                    selectedSubject == null
+                    ) {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
@@ -143,11 +117,9 @@ class _AddMarksScreenState extends State<AddMarksScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AddMarksScreenProceed(
+                      builder: (context) => EditMarksScreen(
                         selectedClass: selectedClass!,
                         selectedSubject: selectedSubject!,
-                        selectedType: selectedType!,
-                        selectedExam: selectedExam!,
                       ),
                     ),
                   );
