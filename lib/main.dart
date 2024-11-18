@@ -38,6 +38,15 @@ class MyApp extends StatelessWidget {
             elevation: 5, // Button shadow
           ),
         ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: const Color(0xFF134B70), // Background color
+          foregroundColor: Colors.white, // Icon or text color
+          shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10), // Rounded corners
+          ),
+           elevation: 5, // Elevation
+        ),
+
       ),
       debugShowCheckedModeBanner: false, // Hide the debug banner
       home: LoginAs(), // Your login screen

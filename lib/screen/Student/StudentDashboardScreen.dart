@@ -1,4 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/Admin/EditTeacher.dart';
+import 'package:school_bridge_app/screen/Admin/HolidayAdminScreen.dart';
+import 'package:school_bridge_app/screen/Student/HolidayScreen.dart';
+import 'package:school_bridge_app/screen/Student/ScheduleScreen.dart';
 import 'student_profile_screen.dart'; // Import the StudentProfileScreen
 
 class StudentDashboardScreen extends StatelessWidget {
@@ -6,40 +12,84 @@ class StudentDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return Center(child: Text('User not logged in'));
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF134B70),
-        title: const Text('Student Dashboard'),
+        title: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('Student')
+              .where('Email', isEqualTo: user.email)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Text('Loading...');
+            }
+
+            if (snapshot.data!.docs.isEmpty) {
+              return Text('No student data found');
+            }
+
+            var teacherData = snapshot.data!.docs.first;
+            String teacherName = teacherData['Name'] ?? 'Student';
+
+            return Text(
+              'Hi, $teacherName',
+              style: TextStyle(color: Colors.white),
+            );
+          },
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.person), // Profile Icon
-            onPressed: () {
-              // Navigate to StudentProfileScreen when profile icon is clicked
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const StudentProfileScreen(),
-                ),
-              );
-            },
+          Padding(
+            padding: const EdgeInsets.only(right: 20.0),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('Student')
+                  .where('Email', isEqualTo: user.email)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey[300],
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                var teacherData = snapshot.data!.docs.first;
+                String profileImageUrl = teacherData['ProfilePicture'] ?? '';
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => EditTeacherProfileScreen(
+                          teacherId: teacherData.id, // Pass the document ID
+                          teacherData: teacherData.data()
+                              as Map<String, dynamic>, // Use .data() to convert
+                        ),
+                      ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage: profileImageUrl.isNotEmpty
+                        ? NetworkImage(profileImageUrl)
+                        : null,
+                    child: profileImageUrl.isEmpty
+                        ? Icon(Icons.person, size: 30, color: Colors.white)
+                        : null,
+                  ),
+                );
+              },
+            ),
           ),
         ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            _buildDrawerItem('assets/attendance.png', 'Attendance'),
-            _buildDrawerItem('assets/chat.png', 'FeedBack'),
-            _buildDrawerItem('assets/Profile.png', 'Profile'),
-            _buildDrawerItem('assets/exam.png', 'Exam'),
-            _buildDrawerItem('assets/timetable.png', 'Time-table'),
-            _buildDrawerItem('assets/leave-apply.png', 'Apply Leave'),
-            _buildDrawerItem('assets/event.png', 'Events and Activity'),
-            _buildDrawerItem('assets/notification.png', 'Notifications'),
-            _buildDrawerItem('assets/gallery.png', 'Gallery'),
-          ],
-        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -48,11 +98,6 @@ class StudentDashboardScreen extends StatelessWidget {
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           children: [
-            _buildDashboardItem(
-              context,
-              'assets/Sp.png', // Profile asset
-              'PROFILE',
-            ),
             _buildDashboardItem(
               context,
               'assets/holidays.png', // Holidays asset
@@ -126,11 +171,22 @@ class StudentDashboardScreen extends StatelessWidget {
   Widget _buildDashboardItem(BuildContext context, String imagePath, String label) {
     return GestureDetector(
       onTap: () {
-        if (label == 'PROFILE') {
+        if (label == 'HOLIDAYS') {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const StudentProfileScreen(),
+              builder: (context) =>  HolidayScreen(),
+            ),
+          );
+        }
+
+        if (label == 'SCHEDULE') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>  ScheduleScreen(
+                className: '1A',
+              ),
             ),
           );
         }
