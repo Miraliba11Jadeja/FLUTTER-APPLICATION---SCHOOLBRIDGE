@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:school_bridge_app/screen/Admin/AnnouncementListScreen.dart';
 import 'package:school_bridge_app/screen/Admin/ClassListScreen.dart';
+import 'package:school_bridge_app/screen/Admin/EventScreen.dart';
+import 'package:school_bridge_app/screen/Admin/ScheduleClassListScreen.dart';
+import 'package:school_bridge_app/screen/Teacher/FeedBack.dart';
 
 class StudentDashboardScreen extends StatelessWidget {
   @override
@@ -25,7 +29,7 @@ class StudentDashboardScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20.0),
         child: GridView.count(
           crossAxisCount: 3,
-          crossAxisSpacing: 10,
+          crossAxisSpacing: 9,
           mainAxisSpacing: 20,
           children: [
             _buildDashboardItem(
@@ -42,14 +46,20 @@ class StudentDashboardScreen extends StatelessWidget {
               imagePath: 'assets/timetable.png', // Path to your image
               label: "SCHEDULE",
               onTap: () {
-                // Navigate to Holidays Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ScheduleClassListScreen()),
+                );
               },
             ),
             _buildDashboardItem(
               imagePath: 'assets/calendar.png', // Path to your image
               label: "EVENTS",
               onTap: () {
-                // Navigate to Subject Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => EventScreen()),
+                );
               },
             ),
             _buildDashboardItem(
@@ -70,14 +80,20 @@ class StudentDashboardScreen extends StatelessWidget {
               imagePath: 'assets/chat.png', // Path to your image
               label: "FEEDBACK",
               onTap: () {
-                // Navigate to Event Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FeedbackScreen()),
+                );
               },
             ),
             _buildDashboardItem(
               imagePath: 'assets/loudspeaker.png', // Path to your image
               label: "ANNOUNCEMENT",
               onTap: () {
-                // Navigate to Announcement Section
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AnnouncementListScreen()),
+                );
               },
             ),
           ],

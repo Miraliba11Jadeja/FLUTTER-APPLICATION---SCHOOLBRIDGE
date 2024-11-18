@@ -49,15 +49,16 @@ class _AddStudentState extends State<AddStudent> {
   }
 
   Future<void> fetchClasses() async {
-    try {
-      QuerySnapshot snapshot = await _firestore.collection('Class').get();
-      setState(() {
-        classes = snapshot.docs.map((doc) => doc['Class'] as String).toList();
-      });
-    } catch (e) {
-      print('Error fetching classes: $e');
-    }
+  try {
+    QuerySnapshot snapshot = await _firestore.collection('Class').get();
+    setState(() {
+      classes = snapshot.docs.map((doc) => doc['Class'] as String).toList();
+    });
+  } catch (e) {
+    print('Error fetching classes: $e');
   }
+}
+
 
   // Function to pick image from gallery
   Future<void> _pickImage() async {
@@ -71,54 +72,90 @@ class _AddStudentState extends State<AddStudent> {
 
   // Function to handle form submission and Firebase authentication
   Future<void> _submitForm() async {
-    try {
-      // Step 1: Create the user in Firebase Authentication
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+  try {
+    // Step 1: Create the user in Firebase Authentication
+    UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
 
-      User? user = userCredential.user;
-      if (user == null) {
-        throw Exception('User creation failed. User is null.');
-      }
-
-      // Step 2: Upload the image if it is selected
-      String? imageUrl;
-      if (_image != null) {
-        imageUrl = await _uploadImage();
-      }
-
-      // Step 3: Store student details in Firestore, including the password
-      await _firestore.collection('Student').doc(user.uid).set({
-        'Name': nameController.text.trim(),
-        'Contact': contactController.text.trim(),
-        'Email': emailController.text.trim(),
-        'Gender': genderController.text.trim(),
-        'Dob': dobController.text.trim(),
-        'Aadhar': aadharController.text.trim(),
-        'PresentA': presentAController.text.trim(),
-        'PermanentA': permanentAController.text.trim(),
-        'City': cityController.text.trim(),
-        'State': stateController.text.trim(),
-        'PinCode': pinCodeController.text.trim(),
-        'Country': countryController.text.trim(),
-        'Class': selectedClass,
-        'Username': usernameController.text.trim(),
-        'Password': passwordController.text.trim(), // Save password to Firestore
-        'Previous Result': previousResultController.text.trim(),
-        'ProfilePicture': imageUrl,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Student added successfully!'),
-      ));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error adding student: $e'),
-      ));
+    User? user = userCredential.user;
+    if (user == null) {
+      throw Exception('User creation failed. User is null.');
     }
+
+    // Step 2: Get the next roll number for the selected class
+    int rollNo = await _getNextRollNo(selectedClass);
+
+    // Step 3: Upload the image if it is selected
+    String? imageUrl;
+    if (_image != null) {
+      imageUrl = await _uploadImage();
+    }
+
+    // Step 4: Store student details in Firestore, including the password and roll number
+    await _firestore.collection('Student').doc(user.uid).set({
+      'Name': nameController.text.trim(),
+      'Contact': contactController.text.trim(),
+      'Email': emailController.text.trim(),
+      'Gender': genderController.text.trim(),
+      'Dob': dobController.text.trim(),
+      'Aadhar': aadharController.text.trim(),
+      'PresentA': presentAController.text.trim(),
+      'PermanentA': permanentAController.text.trim(),
+      'City': cityController.text.trim(),
+      'State': stateController.text.trim(),
+      'PinCode': pinCodeController.text.trim(),
+      'Country': countryController.text.trim(),
+      'Class': selectedClass,
+      'RollNo': rollNo, // Store the generated RollNo
+      'Username': usernameController.text.trim(),
+      'Password': passwordController.text.trim(), // Save password to Firestore
+      'Previous Result': previousResultController.text.trim(),
+      'ProfilePicture': imageUrl,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Student added successfully with Roll No: $rollNo!'),
+    ));
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Error adding student: $e'),
+    ));
   }
+}
+
+Future<int> _getNextRollNo(String? selectedClass) async {
+  if (selectedClass == null || selectedClass.isEmpty) {
+    throw Exception('Class is not selected.');
+  }
+
+  try {
+    // Step 1: Query Firestore to get all students in the selected class
+    QuerySnapshot snapshot = await _firestore
+        .collection('Student')
+        .where('Class', isEqualTo: selectedClass)
+        .get();
+
+    // Step 2: Get all roll numbers of students in the selected class
+    List<int> rollNumbers = snapshot.docs
+        .map((doc) => doc['RollNo'] as int)
+        .toList();
+
+    // Step 3: If there are no students in the class, the roll number should be 1
+    if (rollNumbers.isEmpty) {
+      return 1;
+    }
+
+    // Step 4: Otherwise, get the maximum roll number and return the next one
+    int maxRollNo = rollNumbers.reduce((a, b) => a > b ? a : b);
+    return maxRollNo + 1; // Increment the highest roll number by 1
+  } catch (e) {
+    print('Error fetching roll numbers: $e');
+    return 1; // Default to 1 if there's an error
+  }
+}
+
 
   Future<String?> _uploadImage() async {
     if (_image == null) return null;
