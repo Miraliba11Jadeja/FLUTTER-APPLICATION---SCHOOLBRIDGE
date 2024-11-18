@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:school_bridge_app/screen/Admin/AnnouncementListScreen.dart';
 import 'package:school_bridge_app/screen/Admin/ClassListScreen.dart';
 import 'package:school_bridge_app/screen/Admin/EventScreen.dart';
+import 'package:school_bridge_app/screen/Admin/ResultClassListScreen.dart';
 import 'package:school_bridge_app/screen/Admin/ScheduleClassListScreen.dart';
 import 'package:school_bridge_app/screen/Teacher/FeedBack.dart';
 
@@ -73,7 +74,7 @@ class StudentDashboardScreen extends StatelessWidget {
               imagePath: 'assets/exam-time.png', // Path to your image
               label: "RESULT",
               onTap: () {
-                // Navigate to Feedback Section
+                Navigator.push(context, MaterialPageRoute(builder: (context) => ResultClassListScreen()),);
               },
             ),
             _buildDashboardItem(

@@ -5,12 +5,12 @@ import 'package:school_bridge_app/screen/Admin/ClassScheduleScreen.dart';
 import 'package:school_bridge_app/screen/Admin/StudentListScreen.dart';
 import 'package:school_bridge_app/screen/Admin/StudentResultListScreen.dart';
 
-class ScheduleClassListScreen extends StatefulWidget {
+class ResultClassListScreen extends StatefulWidget {
   @override
-  _ScheduleClassListScreenState createState() => _ScheduleClassListScreenState();
+  _ResultClassListScreenState createState() => _ResultClassListScreenState();
 }
 
-class _ScheduleClassListScreenState extends State<ScheduleClassListScreen> {
+class _ResultClassListScreenState extends State<ResultClassListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,16 +99,6 @@ class _ScheduleClassListScreenState extends State<ScheduleClassListScreen> {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddClassScreen()),
-          );
-        },
-        child: Icon(Icons.add),
-        backgroundColor: Color(0xFF134B70),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
     );
